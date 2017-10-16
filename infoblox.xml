@@ -1,0 +1,42 @@
+<root>
+    <name>Infoblox</name>
+    <key>infoblox</key>
+    <state>stable</state>
+    <logo>https://raw.githubusercontent.com/jsamaniegog/infoblox/master/pics/logo.gif</logo>
+    <description>
+        <short>
+            <es>Complemento para la integración con Infoblox.</es>
+            <en>Plugin for integration with Infoblox.</en>
+        </short>
+        <long>
+            <es>Complemento para la integración con Infoblox.</es>
+            <en>Plugin for integration with Infoblox.</en>
+        </long>
+    </description>
+    <homepage>https://github.com/jsamaniegog/infoblox</homepage>
+    <download>https://github.com/jsamaniegog/infoblox/releases/latest</download>
+    <issues>https://github.com/jsamaniegog/infoblox/issues</issues>
+    <readme>https://github.com/jsamaniegog/infoblox/blob/master/README.md</readme>
+    <authors>
+        <author>Javier Samaniego García</author>
+    </authors>
+    <versions>
+        <version>
+            <num>1.0.0</num>
+            <compatibility>9.1</compatibility>
+            <compatibility>9.2</compatibility>
+        </version>
+    </versions>
+    <langs>
+        <lang>es_ES</lang>
+        <lang>en_GB</lang>
+    </langs>
+    <license>GPL v2+</license>
+    <tags>
+        <es></es>
+        <en></en>
+    </tags>
+    <!--<screenshots>-->
+    <!--<screenshot></screenshot>-->
+    <!--</screenshots>-->
+</root>
