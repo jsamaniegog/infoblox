@@ -38,9 +38,10 @@ function plugin_infoblox_install() {
     }
 
     // register a cron for task execution
+    $time_in_seconds = 86400; // 1 day
     CronTask::Register(
-        "PluginInfobloxDNS", "InfobloxDNS", $time_in_seconds, array(
-        'comment' => __('Infoblox DNS syncronization.', 'infoblox'),
+        "PluginInfobloxCron", "Infoblox", $time_in_seconds, array(
+        'comment' => __('Infoblox syncronization.', 'infoblox'),
         'mode' => CronTask::MODE_EXTERNAL
         )
     );

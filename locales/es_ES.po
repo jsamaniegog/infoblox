@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Complemento Infoblox para GLPI\n"
-"POT-Creation-Date: 2017-10-16 10:44+0200\n"
-"PO-Revision-Date: 2017-10-16 10:46+0200\n"
+"POT-Creation-Date: 2017-10-17 19:12+0200\n"
+"PO-Revision-Date: 2017-10-17 19:14+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: es_ES\n"
@@ -15,35 +15,27 @@ msgstr ""
 "X-Poedit-KeywordsList: __;_n:1,2\n"
 "X-Poedit-SearchPath-0: .\n"
 
-#: front/config.form.php:29 front/server.form.php:29
+#: front/config.form.php:29 front/server.form.php:24
 msgid "No permission"
 msgstr "No autorizado"
 
-#: front/config.form.php:32 front/server.form.php:36
+#: front/config.form.php:32
 msgid "Saving configuration..."
 msgstr "Guardando configuración..."
 
-#: front/config.form.php:40 front/server.form.php:43
+#: front/config.form.php:40 front/server.form.php:48
 msgid "Error on save"
 msgstr "Error al guardar"
 
-#: front/config.form.php:44 front/server.form.php:47
+#: front/config.form.php:44
 msgid "Configuration saved"
 msgstr "Configuración guardada"
 
-#: front/server.form.php:54
-msgid "Unknown error"
-msgstr "Error desconocido"
+#: hook.php:44
+msgid "Infoblox syncronization."
+msgstr "Sincronización de Infoblox."
 
-#: hook.php:42
-msgid "infoblox"
-msgstr ""
-
-#: hook.php:43
-msgid "Infoblox DNS syncronization."
-msgstr "Sincronización DNS de Infoblox."
-
-#: inc/config.class.php:32 setup.php:46
+#: inc/config.class.php:32 setup.php:48
 msgid "Infoblox"
 msgstr ""
 
@@ -55,22 +47,79 @@ msgstr "Complemento Infoblox"
 msgid "Infoblox Setup"
 msgstr "Configuración de Infoblox"
 
-#: inc/config.class.php:59 inc/server.class.php:19
+#: inc/config.class.php:59
 msgid "Servers"
 msgstr "Servidores"
 
-#: inc/server.class.php:41
-msgid "Name"
-msgstr "Nombre"
+#: inc/cron.class.php:34
+msgid "Infoblox Cron"
+msgstr "Cron Infoblox"
 
-#: inc/server.class.php:46
+#: inc/cron.class.php:64
+msgid "No Infoblox servers configured."
+msgstr "No hay servidores de Infoblox configurados."
+
+#: inc/cron.class.php:74
+msgid "Nothing to do"
+msgstr "Nada que hacer"
+
+#: inc/server.class.php:22 inc/server.class.php:32
+msgid "Infoblox Server"
+msgid_plural "Infoblox Servers"
+msgstr[0] "Servidor de Infoblox"
+msgstr[1] "Configuración de Infoblox"
+
+#: inc/server.class.php:36
+msgid "Server name"
+msgstr "Nombre del servidor"
+
+#: inc/server.class.php:42 inc/server.class.php:74
 msgid "FQDN or IP Address"
 msgstr "FQDN o Dirección IP"
 
-#: setup.php:60
+#: inc/server.class.php:69
+msgid "Name"
+msgstr "Nombre"
+
+#: inc/server.class.php:79
+msgid "User"
+msgstr "Usuario"
+
+#: inc/server.class.php:84
+msgid "Password"
+msgstr "Contraseña"
+
+#: inc/server.class.php:89
+msgid "WAPI version"
+msgstr "Versión de WAPI"
+
+#: inc/server.class.php:92
+msgid ""
+"Example: 2.6.1 (Go to https://your.infoblox.server/wapidoc to know the "
+"version)"
+msgstr ""
+"Ejemplo: 2.6.1 (Vaya a https://tu.servidor.infoblox/wapidoc para saber "
+"la versión)"
+
+#: inc/server.class.php:96
+msgid "Import options"
+msgstr "Opciones de importación"
+
+#: inc/server.class.php:100
+msgid " Devices<br><br>"
+msgstr " Dispositivos<br><br>"
+
+#: setup.php:62
+msgid "This plugin requires Linux OS."
+msgstr "Este complemento requiere SO Linux."
+
+#: setup.php:67
 msgid "This plugin requires GLPI >= 9.1"
 msgstr "Este complemento requiere GLPI >= 9.1"
 
-#: setup.php:81
+#: setup.php:88
 msgid "Installed / not configured"
 msgstr "Instalado / no configurado"
+
+#~ msgid "Unknown error"
+#~ msgstr "Error desconocido"

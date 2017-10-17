@@ -25,11 +25,11 @@ class PluginInfobloxServer extends CommonDBTM {
     /**
      * @return array
      */
-    function getSearchOptions() {
+    function getSearchOptions($nb = 2) {
 
         $tab = array();
 
-        $tab['common'] = _n('Infoblox Server', 'Infoblox Servers', $nb, 'dnsinventory');
+        $tab['common'] = _n('Infoblox Server', 'Infoblox Servers', $nb, 'infoblox');
 
         $tab[1]['table'] = $this->getTable();
         $tab[1]['field'] = 'name';
@@ -46,19 +46,16 @@ class PluginInfobloxServer extends CommonDBTM {
 
     /**
      * Show DNS server form to add or edit.
-     * @global type $DB
-     * @param type $options
+     * @param type $id
      * @return boolean
      */
-    function showForm($options) {
-        global $DB;
-
+    function showForm($id = null, $options = array()) {
         if (!Session::haveRight("config", UPDATE)) {
             return false;
         }
 
         // get server data
-        $this->getFromDB($options['id']);
+        $this->getFromDB($id);
 
         $this->showFormHeader($options);
 
@@ -76,9 +73,44 @@ class PluginInfobloxServer extends CommonDBTM {
 
         echo __('FQDN or IP Address', 'infoblox') . "</td><td colspan='2'>";
         echo Html::input("address", array('value' => $this->fields['address']));
+        
+        echo "</td></tr><tr><td colspan='2'>";
+        
+        echo __('User', 'infoblox') . "</td><td colspan='2'>";
+        echo Html::input("user", array('value' => $this->fields['user']));
+        
+        echo "</td></tr><tr><td colspan='2'>";
+        
+        echo __('Password', 'infoblox') . "</td><td colspan='2'>";
+        echo Html::input("password", array('value' => $this->fields['password']));
 
+        echo "</td></tr><tr><td colspan='2'>";
+        
+        echo __('WAPI version', 'infoblox') . "</td><td colspan='2'>";
+        echo Html::input("wapi_version", array('value' => $this->fields['wapi_version']));
+        echo '&nbsp;';
+        echo __('Example: 2.6.1 (Go to https://your.infoblox.server/wapidoc to know the version)', 'infoblox');
+        
+        echo "</td></tr><tr><td colspan='2'>";
+        
+        echo __('Import options', 'infoblox') . "</td><td colspan='2'>";
+        $rand = Dropdown::showYesNo('devices', $this->fields['devices'], -1, array('use_checkbox'=>true));
+        echo "<label ";
+        echo "for='dropdown_devices$rand'>";
+        echo __(' Devices<br><br>', 'infoblox');
+        echo "</label>";
+        $rand = Dropdown::showYesNo('dhcp', $this->fields['dhcp'], -1, array('use_checkbox'=>true));
+        echo "<label ";
+        echo "for='dropdown_dhcp$rand'>";
+        echo ' DHCP<br><br>';
+        echo "</label>";
+        $rand = Dropdown::showYesNo('dns', $this->fields['dns'], -1, array('use_checkbox'=>true));
+        echo "<label ";
+        echo "for='dropdown_dns$rand'>";
+        echo ' DNS';
+        echo "</label>";
+        
         echo "</td></tr>";
-
 
         $this->showFormButtons($options);
 

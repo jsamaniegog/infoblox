@@ -58,6 +58,11 @@ function plugin_version_infoblox() {
  * @return boolean
  */
 function plugin_infoblox_check_prerequisites() {
+    if (PHP_OS !== 'Linux') {
+        echo __('This plugin requires Linux OS.', 'infoblox');
+        return false;
+    }
+    
     if (version_compare(GLPI_VERSION, '9.1', 'lt')) {
         echo __('This plugin requires GLPI >= 9.1', 'infoblox');
         return false;

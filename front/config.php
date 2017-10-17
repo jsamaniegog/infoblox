@@ -17,13 +17,15 @@
  */
 
 include ("../../../inc/includes.php");
+
 Session::checkRight("config", UPDATE);
 
-Html::header(PluginInfobloxServer::getTypeName(Session::getPluralNumber()), $_SERVER['PHP_SELF'], 'config', 'PluginInfobloxConfig');
+Html::header(PluginInfobloxConfig::getTypeName(Session::getPluralNumber()), $_SERVER['PHP_SELF'], 'config', 'PluginInfobloxConfig');
+
+$server = new PluginInfobloxConfig();
 
 $config = new PluginInfobloxConfig();
 
 $config->showForm();
 
 Html::footer();
-?>

@@ -25,20 +25,23 @@ if (!Session::haveRight("config", UPDATE)) {
     HTML::back();
 }
 
+$post_values = filter_input_array(INPUT_POST);
+$get_values = filter_input_array(INPUT_GET);
+
 $server = new PluginInfobloxServer();
 
-if (isset($_POST['update']) or isset($_POST['add']) or isset($_POST['purge'])) {
+if (isset($post_values['update']) or isset($post_values['add']) or isset($post_values['purge'])) {
     try {
         $config = new PluginInfobloxConfig();
 
-        if (isset($_POST['update'])) {
-            $server->update($_POST);
+        if (isset($post_values['update'])) {
+            $server->update($post_values);
         }
-        if (isset($_POST['add'])) {
-            $server->add($_POST);
+        if (isset($post_values['add'])) {
+            $server->add($post_values);
         }
-        if (isset($_POST['purge'])) {
-            $server->delete($_POST);
+        if (isset($post_values['purge'])) {
+            $server->delete($post_values);
             Html::redirect(PluginInfobloxServer::getFormURL());
         }
     } catch (Exception $e) {
@@ -53,6 +56,7 @@ Html::header(
     PluginInfobloxServer::getTypeName(Session::getPluralNumber()), $_SERVER['PHP_SELF'], "config", "PluginInfobloxServer"
 );
 
-$server->display(array('id' => $_GET["id"]));
+$id = (isset($get_values["id"])) ? $get_values["id"] : null;
+$server->display(array('id' => $id));
 
 Html::footer();
