@@ -68,11 +68,18 @@ class PluginInfobloxCron extends CommonDBTM {
         $toReturn = true;
         
         foreach ($infoblox_servers as $server) {
+            // for logs
+            $logPrefix = "[" . $server['name'] . "] ";
+            $logPrefixError = $logPrefix . "Error: ";
+            
             $task->addVolume(1);
             
             // if import options are not activated
-            if ($server['devices'] == '0' and $server['dhcp'] == '0' and $server['dns'] == '0') {
-                $task->log("[" . $server['name'] . "] " . __('Nothing to do', 'infoblox'));
+            if ($server['devices'] == '0' 
+                and $server['dhcp'] == '0' 
+                and $server['dns'] == '0'
+            ) {
+                $task->log($logPrefix . __('Nothing to do', 'infoblox'));
                 continue;
             }
             
@@ -95,36 +102,16 @@ class PluginInfobloxCron extends CommonDBTM {
             
             // import dhcp
             if ($server['dhcp'] == '1') {
-                $result = $infoblox->query("ipv4address", array("network" => "10.40.83.0/25"));
-                if (!$result) {
-                    $task->log("[" . $server['name'] . "] Error: " . $infoblox->getError());
-                    continue;
+                
+                $result = $infoblox->query("record:a", array("name" => ".*hcuv"));
+                
+                if (is_array($result) and empty($result)) {
+                    $task->log($logPrefixError . $infoblox->getError());
+                    
+                } elseif (!$result) {
+                    $task->log($logPrefixError . $infoblox->getError());
                 }
             }
-            
-            // TODO: borrar todo este código referente al uso de la API con Perl.
-            // create an infoblox object
-            /*$infoblox = new Infoblox(
-                $server['address'], 
-                $server['user'], 
-                $server['password']
-            );
-            
-            // todo: search
-            $infoblox->search("Infoblox::DNS::Record::A", "name", "^hcuve.*\.es$");
-            
-            // get array of results
-            if (!$outputs = $infoblox->getResults()) {
-                $toReturn = false;
-                $errors = $infoblox->getErrors();
-                foreach ($errors as $error) {
-                    $task->log("[" . $server['name'] . "] " . $error);
-                }
-                
-                continue;
-            }*/
-            
-            
         }
         
         return $toReturn;

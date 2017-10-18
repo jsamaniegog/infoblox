@@ -21,6 +21,7 @@
  * This class if to query the REST API of Infoblox named WAPI.
  *
  * @author Javier Samaniego García <jsamaniegog@gmail.com>
+ * @version GIT: $Id$
  */
 class InfobloxWapiQuery {
 
@@ -92,6 +93,28 @@ class InfobloxWapiQuery {
     private $httpCode;
 
     /**
+     * Option for enable paging for GET method. If it's false the maximum number 
+     * of results is 1000, in case that this limit will be exceeded you'll get 
+     * an error.
+     * @var bool true means enabled and false disabled
+     */
+    private $_paging = false;
+
+    /**
+     * Option for enable paging for GET method. If set to 1, a results object 
+     * will be returned. This option must be enabled if $_paging is enabled.
+     * @var bool true means enabled and false disabled
+     */
+    //private $_return_as_object = true;
+    
+    /**
+     * Option for GET method. It indicates the maximum number of results to be 
+     * returned. Required if $_paging is enabled.
+     * @var int 
+     */
+    private $_max_results = 5000;
+    
+    /**
      * Create an InfobloxWapiQuery object.
      * @param type $address FQDN or IP Address of the Infoblox server.
      * @param type $user Username.
@@ -112,11 +135,15 @@ class InfobloxWapiQuery {
      * @param string 
      */
     public function query($object, $fields, $method = "GET") {
+        // sets previous send query
         $this->setObject($object);
         $this->setFields($fields);
-        $this->sendQueryByCurl();
         $this->setMethod($method);
         
+        // send query to infoblox server
+        $this->sendQueryByCurl();
+        
+        // return the results
         return $this->getResult();
     }
     
@@ -192,6 +219,7 @@ class InfobloxWapiQuery {
 
     /**
      * Get the password.
+     * @return string Password.
      */
     private function getPassword() {
         return $this->password;
@@ -206,20 +234,53 @@ class InfobloxWapiQuery {
     }
     
     /**
-     * Send query by curl.
+     * Get _paging variable.
+     * @return bool
      */
-    private function sendQueryByCurl() {
-        $curl = curl_init();
+    private function getPaging() {
+        return $this->_paging;
+    }
+    
+    /**
+     * Get _max_results variable.
+     * @return int
+     */
+    private function getMaxResults() {
+        return $this->_max_results;
+    }
+    
+    private function getParams() {
+        $url_params;
+        if ($this->getMethod() == 'GET') {
+            $url_params .= ($this->getPaging()) ? "?_paging=1" : "" ;
+            $url_params .= ($this->getPaging()) ? "&_return_as_object=1" : "" ;
+            $url_params .= ($this->getPaging()) ? "&_max_results=" . $this->getMaxResults() : "" ;
+        }
         
-        $jsonData = $this->getJsonData();
-        
-        curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, 0);
-        curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 0);
-        curl_setopt($curl, CURLOPT_URL, $this->getURL() . $this->getObject());
+        return $url_params;
+    }
+    
+    /**
+     * Sets curl options.
+     * @param type $curl
+     * @param type $jsonData
+     * @param type $urlParams
+     */
+    private function setCurlOpts(&$curl, $jsonData, $urlParams) {
+        $this->setCurlOptsSSL($curl);
+        curl_setopt(
+            $curl, 
+            CURLOPT_URL, 
+            $this->getURL() . $this->getObject() . $urlParams
+        );
         curl_setopt($curl, CURLOPT_COOKIESESSION, true);
         curl_setopt($curl, CURLOPT_CUSTOMREQUEST, $this->getMethod());
         curl_setopt($curl, CURLOPT_POSTFIELDS, $jsonData);
-        curl_setopt($curl, CURLOPT_USERPWD, $this->getUser() . ":" . $this->getPassword());
+        curl_setopt(
+            $curl, 
+            CURLOPT_USERPWD, 
+            $this->getUser() . ":" . $this->getPassword()
+        );
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
         curl_setopt(
             $curl, 
@@ -229,10 +290,29 @@ class InfobloxWapiQuery {
                 'Content-Length: ' . strlen($jsonData)
             )
         );
+    }
+    
+    private function setCurlOptsSSL(&$curl) {
+        curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, 0);
+        curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 0);
+    }
+    
+    /**
+     * Send query by curl.
+     */
+    private function sendQueryByCurl() {
+        $curl = curl_init();
         
+        // JSON data request
+        $jsonData = $this->getJsonData();
+        
+        // some params
+        $urlParams = $this->getParams();
+        
+        $this->setCurlOpts($curl, $jsonData, $urlParams);
         $this->setResult(curl_exec($curl));
-        
         $this->setHttpCode(curl_getinfo($curl, CURLINFO_HTTP_CODE));
+        
         curl_close($curl);
     }
 
@@ -268,7 +348,7 @@ class InfobloxWapiQuery {
         $result_decoded = json_decode($result, true);
         
         // bad json query or authentication fail
-        if ($result_decoded == null and is_string($result)) {
+        if ($result_decoded == null and is_string($result_decoded)) {
             $this->setError($result);
             $result_decoded = false;
         }
