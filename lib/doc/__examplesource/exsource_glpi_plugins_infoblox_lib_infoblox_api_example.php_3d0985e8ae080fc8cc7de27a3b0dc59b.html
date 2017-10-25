@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+  <html xmlns="http://www.w3.org/1999/xhtml">
+		<head>
+			<!-- template designed by Marco Von Ballmoos -->
+			<title>example</title>
+			<link rel="stylesheet" href="../media/stylesheet.css" />
+			<meta http-equiv='Content-Type' content='text/html; charset=iso-8859-1'/>
+		</head>
+		<body>
+						
+
+<h1>example</h1>
+<div class="listing">
+<div class="src-code"><ol><li><div class="src-line"><span class="src-php">&lt;?php</span></div></li>
+<li><div class="src-line">&nbsp;</div></li>
+<li><div class="src-line"><span class="src-comm">/*&nbsp;</span></div></li>
+<li><div class="src-line"><span class="src-comm">&nbsp;*&nbsp;Copyright&nbsp;(C)&nbsp;2017&nbsp;Javier&nbsp;Samaniego&nbsp;García&nbsp;&lt;jsamaniegog@gmail.com&gt;</span></div></li>
+<li><div class="src-line"><span class="src-comm">&nbsp;*</span></div></li>
+<li><div class="src-line"><span class="src-comm">&nbsp;*&nbsp;This&nbsp;program&nbsp;is&nbsp;free&nbsp;software:&nbsp;you&nbsp;can&nbsp;redistribute&nbsp;it&nbsp;and/or&nbsp;modify</span></div></li>
+<li><div class="src-line"><span class="src-comm">&nbsp;*&nbsp;it&nbsp;under&nbsp;the&nbsp;terms&nbsp;of&nbsp;the&nbsp;GNU&nbsp;General&nbsp;Public&nbsp;License&nbsp;as&nbsp;published&nbsp;by</span></div></li>
+<li><div class="src-line"><span class="src-comm">&nbsp;*&nbsp;the&nbsp;Free&nbsp;Software&nbsp;Foundation,&nbsp;either&nbsp;version&nbsp;3&nbsp;of&nbsp;the&nbsp;License,&nbsp;or</span></div></li>
+<li><div class="src-line"><span class="src-comm">&nbsp;*&nbsp;(at&nbsp;your&nbsp;option)&nbsp;any&nbsp;later&nbsp;version.</span></div></li>
+<li><div class="src-line"><span class="src-comm">&nbsp;*</span></div></li>
+<li><div class="src-line"><span class="src-comm">&nbsp;*&nbsp;This&nbsp;program&nbsp;is&nbsp;distributed&nbsp;in&nbsp;the&nbsp;hope&nbsp;that&nbsp;it&nbsp;will&nbsp;be&nbsp;useful,</span></div></li>
+<li><div class="src-line"><span class="src-comm">&nbsp;*&nbsp;but&nbsp;WITHOUT&nbsp;ANY&nbsp;WARRANTY;&nbsp;without&nbsp;even&nbsp;the&nbsp;implied&nbsp;warranty&nbsp;of</span></div></li>
+<li><div class="src-line"><span class="src-comm">&nbsp;*&nbsp;MERCHANTABILITY&nbsp;or&nbsp;FITNESS&nbsp;FOR&nbsp;A&nbsp;PARTICULAR&nbsp;PURPOSE.&nbsp;&nbsp;See&nbsp;the</span></div></li>
+<li><div class="src-line"><span class="src-comm">&nbsp;*&nbsp;GNU&nbsp;General&nbsp;Public&nbsp;License&nbsp;for&nbsp;more&nbsp;details.</span></div></li>
+<li><div class="src-line"><span class="src-comm">&nbsp;*</span></div></li>
+<li><div class="src-line"><span class="src-comm">&nbsp;*&nbsp;You&nbsp;should&nbsp;have&nbsp;received&nbsp;a&nbsp;copy&nbsp;of&nbsp;the&nbsp;GNU&nbsp;General&nbsp;Public&nbsp;License</span></div></li>
+<li><div class="src-line"><span class="src-comm">&nbsp;*&nbsp;along&nbsp;with&nbsp;this&nbsp;program.&nbsp;&nbsp;If&nbsp;not,&nbsp;see&nbsp;&lt;http://www.gnu.org/licenses/&gt;.</span></div></li>
+<li><div class="src-line"><span class="src-comm">&nbsp;*/</span></div></li>
+<li><div class="src-line"><span class="src-doc">/**</span></div></li>
+<li><div class="src-line"><span class="src-doc">&nbsp;*&nbsp;</span><span class="src-doc-coretag">@package</span><span class="src-doc">&nbsp;InfobloxAPIQuery</span></div></li>
+<li><div class="src-line"><span class="src-doc">&nbsp;*/</span></div></li>
+<li><div class="src-line"><span class="src-comm">//&nbsp;Arguments.&nbsp;Fill&nbsp;this&nbsp;variables&nbsp;to&nbsp;test&nbsp;it.</span></div></li>
+<li><div class="src-line"><span class="src-var">$address&nbsp;&nbsp;</span>=&nbsp;<span class="src-str">&quot;infoblox.midominio.es&quot;</span><span class="src-sym">;</span></div></li>
+<li><div class="src-line"><span class="src-var">$user&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>=&nbsp;<span class="src-str">&quot;admin&quot;</span><span class="src-sym">;</span></div></li>
+<li><div class="src-line"><span class="src-var">$password&nbsp;</span>=&nbsp;<span class="src-str">&quot;micontraseña&quot;</span><span class="src-sym">;</span></div></li>
+<li><div class="src-line">&nbsp;</div></li>
+<li><div class="src-line"><span class="src-comm">//&nbsp;Create&nbsp;an&nbsp;infoblox&nbsp;object</span></div></li>
+<li><div class="src-line"><span class="src-var">$infoblox&nbsp;</span>=&nbsp;<span class="src-key">new&nbsp;</span><span class="src-id"><a href="../InfobloxAPIQuery/Infoblox.html">Infoblox</a></span><span class="src-sym">(</span><span class="src-var">$address</span><span class="src-sym">,&nbsp;</span><span class="src-var">$user</span><span class="src-sym">,&nbsp;</span><span class="src-var">$password</span><span class="src-sym">)</span><span class="src-sym">;</span></div></li>
+<li><div class="src-line">&nbsp;</div></li>
+<li><div class="src-line"><span class="src-comm">//&nbsp;Search&nbsp;for&nbsp;a&nbsp;DNS&nbsp;host&nbsp;entry&nbsp;by&nbsp;name</span></div></li>
+<li><div class="src-line"><span class="src-var">$infoblox</span><span class="src-sym">-&gt;</span><a href="../InfobloxAPIQuery/Infoblox.html#methodsearch">search</a><span class="src-sym">(</span><span class="src-str">&quot;Infoblox::DNS::Record::A&quot;</span><span class="src-sym">,&nbsp;</span><span class="src-str">&quot;name&quot;</span><span class="src-sym">,&nbsp;</span><span class="src-str">&quot;^midominio.*\.es$&quot;</span><span class="src-sym">)</span><span class="src-sym">;</span></div></li>
+<li><div class="src-line">&nbsp;</div></li>
+<li><div class="src-line"><span class="src-comm">//&nbsp;Get&nbsp;array&nbsp;of&nbsp;results</span></div></li>
+<li><div class="src-line"><span class="src-key">if&nbsp;</span><span class="src-sym">(</span><span class="src-sym">!</span><span class="src-var">$outputs&nbsp;</span>=&nbsp;<span class="src-var">$infoblox</span><span class="src-sym">-&gt;</span><a href="../InfobloxAPIQuery/Infoblox.html#methodgetResults">getResults</a><span class="src-sym">(</span><span class="src-sym">))&nbsp;</span><span class="src-sym">{</span></div></li>
+<li><div class="src-line">&nbsp;&nbsp;&nbsp;&nbsp;<span class="src-comm">//&nbsp;if&nbsp;there&nbsp;is&nbsp;an&nbsp;error...</span></div></li>
+<li><div class="src-line">&nbsp;&nbsp;&nbsp;&nbsp;<span class="src-var">$errors&nbsp;</span>=&nbsp;<span class="src-var">$infoblox</span><span class="src-sym">-&gt;</span><a href="../InfobloxAPIQuery/Infoblox.html#methodgetErrors">getErrors</a><span class="src-sym">(</span><span class="src-sym">)</span><span class="src-sym">;</span></div></li>
+<li><div class="src-line">&nbsp;&nbsp;&nbsp;&nbsp;</div></li>
+<li><div class="src-line">&nbsp;&nbsp;&nbsp;&nbsp;<span class="src-key">foreach&nbsp;</span><span class="src-sym">(</span><span class="src-var">$errors&nbsp;</span><span class="src-key">as&nbsp;</span><span class="src-var">$error</span><span class="src-sym">)&nbsp;</span><span class="src-sym">{</span></div></li>
+<li><div class="src-line">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;echo&nbsp;<span class="src-var">$error</span><span class="src-sym">;</span></div></li>
+<li><div class="src-line">&nbsp;&nbsp;&nbsp;&nbsp;<span class="src-sym">}</span></div></li>
+<li><div class="src-line"><span class="src-sym">}</span></div></li>
+<li><div class="src-line">&nbsp;</div></li>
+<li><div class="src-line"><a href="http://www.php.net/print_r">print_r</a><span class="src-sym">(</span><span class="src-var">$outputs</span><span class="src-sym">)</span><span class="src-sym">;</span></div></li>
+</ol></div>
+</div>
+	<p class="notes" id="credit">
+		Documentation generated on Wed, 18 Oct 2017 20:03:28 +0200 by <a href="http://www.phpdoc.org" target="_blank">phpDocumentor 1.4.4</a>
+	</p>
+	</body>
+</html>

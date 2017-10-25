@@ -1,15 +1,15 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Complemento Infoblox para GLPI\n"
-"POT-Creation-Date: 2017-10-17 19:12+0200\n"
-"PO-Revision-Date: 2017-10-17 19:14+0200\n"
+"POT-Creation-Date: 2017-10-24 07:35+0200\n"
+"PO-Revision-Date: 2017-10-24 07:39+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: es_ES\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: Poedit 2.0.3\n"
+"X-Generator: Poedit 2.0.4\n"
 "X-Poedit-Basepath: ..\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Poedit-KeywordsList: __;_n:1,2\n"
@@ -23,7 +23,7 @@ msgstr "No autorizado"
 msgid "Saving configuration..."
 msgstr "Guardando configuración..."
 
-#: front/config.form.php:40 front/server.form.php:48
+#: front/config.form.php:40 front/server.form.php:50
 msgid "Error on save"
 msgstr "Error al guardar"
 
@@ -35,19 +35,19 @@ msgstr "Configuración guardada"
 msgid "Infoblox syncronization."
 msgstr "Sincronización de Infoblox."
 
-#: inc/config.class.php:32 setup.php:48
+#: inc/config.class.php:38 setup.php:48
 msgid "Infoblox"
-msgstr ""
+msgstr "Infoblox"
 
-#: inc/config.class.php:38
+#: inc/config.class.php:44
 msgid "Infoblox plugin"
 msgstr "Complemento Infoblox"
 
-#: inc/config.class.php:55
+#: inc/config.class.php:61
 msgid "Infoblox Setup"
 msgstr "Configuración de Infoblox"
 
-#: inc/config.class.php:59
+#: inc/config.class.php:65
 msgid "Servers"
 msgstr "Servidores"
 
@@ -55,59 +55,121 @@ msgstr "Servidores"
 msgid "Infoblox Cron"
 msgstr "Cron Infoblox"
 
-#: inc/cron.class.php:64
+#: inc/cron.class.php:235
 msgid "No Infoblox servers configured."
 msgstr "No hay servidores de Infoblox configurados."
 
-#: inc/cron.class.php:74
+#: inc/cron.class.php:250
 msgid "Nothing to do"
 msgstr "Nada que hacer"
 
-#: inc/server.class.php:22 inc/server.class.php:32
+#: inc/server.class.php:35 inc/server.class.php:45
 msgid "Infoblox Server"
 msgid_plural "Infoblox Servers"
 msgstr[0] "Servidor de Infoblox"
-msgstr[1] "Configuración de Infoblox"
+msgstr[1] "Servidores de Infoblox"
 
-#: inc/server.class.php:36
+#: inc/server.class.php:49
 msgid "Server name"
 msgstr "Nombre del servidor"
 
-#: inc/server.class.php:42 inc/server.class.php:74
+#: inc/server.class.php:55 inc/server.class.php:108
 msgid "FQDN or IP Address"
 msgstr "FQDN o Dirección IP"
 
-#: inc/server.class.php:69
+#: inc/server.class.php:103
 msgid "Name"
 msgstr "Nombre"
 
-#: inc/server.class.php:79
+#: inc/server.class.php:113
 msgid "User"
 msgstr "Usuario"
 
-#: inc/server.class.php:84
+#: inc/server.class.php:118
 msgid "Password"
 msgstr "Contraseña"
 
-#: inc/server.class.php:89
+#: inc/server.class.php:123
 msgid "WAPI version"
 msgstr "Versión de WAPI"
 
-#: inc/server.class.php:92
+#: inc/server.class.php:125
 msgid ""
 "Example: 2.6.1 (Go to https://your.infoblox.server/wapidoc to know the "
 "version)"
 msgstr ""
-"Ejemplo: 2.6.1 (Vaya a https://tu.servidor.infoblox/wapidoc para saber "
-"la versión)"
+"Ejemplo: 2.6.1 (Vaya a https://tu.servidor.infoblox/wapidoc para saber la "
+"versión)"
 
-#: inc/server.class.php:96
-msgid "Import options"
-msgstr "Opciones de importación"
+#: inc/server.class.php:132
+msgid "Select the different states to search (empty value \""
+msgstr "Seleccione los diferentes estados para buscar (valor vacío \""
 
-#: inc/server.class.php:100
+#: inc/server.class.php:132
+msgid "\" is alwais searched)"
+msgstr "\" siempre es buscado)"
+
+#: inc/server.class.php:148
+msgid " Zone Name / DNS Sufix"
+msgstr "Nombre de Zona / Sufijo DNS"
+
+#: inc/server.class.php:150
+msgid "Example: domain.com"
+msgstr "Ejemplo: dominio.com"
+
+#: inc/server.class.php:155
+msgid "Active Directory options"
+msgstr "Opciones de Directorio Activo"
+
+#: inc/server.class.php:159
+msgid " It is an Active Directory zone"
+msgstr "Esta es una zona de Directorio Activo"
+
+#: inc/server.class.php:166
+msgid "Import and synchronization options"
+msgstr "Opciones de importación y sincronización"
+
+#: inc/server.class.php:175
 msgid " Devices<br><br>"
 msgstr " Dispositivos<br><br>"
+
+#: inc/server.class.php:192
+msgid "Asset synchronization options"
+msgstr "Opciones de sincronización de activos"
+
+#: inc/server.class.php:196
+msgid "Computer"
+msgid_plural "Computers"
+msgstr[0] "Computador"
+msgstr[1] "Computadores"
+
+#: inc/server.class.php:201
+msgid "Printer"
+msgid_plural "Printers"
+msgstr[0] ""
+msgstr[1] ""
+
+#: inc/server.class.php:201
+msgid " "
+msgstr ""
+
+#: inc/server.class.php:206
+msgid "Device"
+msgid_plural "Devicess"
+msgstr[0] "Dispositivo"
+msgstr[1] "Dispositivos"
+
+#: inc/server.class.php:211
+msgid "Phone"
+msgid_plural "Phones"
+msgstr[0] ""
+msgstr[1] ""
+
+#: inc/server.class.php:216
+msgid "Network device"
+msgid_plural "Network devices"
+msgstr[0] ""
+msgstr[1] ""
 
 #: setup.php:62
 msgid "This plugin requires Linux OS."
@@ -120,6 +182,12 @@ msgstr "Este complemento requiere GLPI >= 9.1"
 #: setup.php:88
 msgid "Installed / not configured"
 msgstr "Instalado / no configurado"
+
+#~ msgid "No DHCP results returned by server"
+#~ msgstr "No hay resultados DHCP devueltos por el servidor"
+
+#~ msgid "Import options"
+#~ msgstr "Opciones de importación"
 
 #~ msgid "Unknown error"
 #~ msgstr "Error desconocido"

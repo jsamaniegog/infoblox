@@ -21,10 +21,16 @@ if (!defined('GLPI_ROOT')) {
     die("Sorry. You can't access directly to this file");
 }
 
+/**
+ * Configuration class.
+ * @package PluginInfoblox
+ * @author Javier Samaniego García <jsamaniegog@gmail.com>
+ */
 class PluginInfobloxConfig extends CommonDBTM {
 
     /**
      * For debug
+     * @var bool Debug switcher.
      */
     const DEBUG_INFOBLOX = false;
 

@@ -34,6 +34,12 @@ if (isset($post_values['update']) or isset($post_values['add']) or isset($post_v
     try {
         $config = new PluginInfobloxConfig();
 
+        if (isset($post_values['state_ids'])) {
+            $post_values['state_ids'] = implode(",", $post_values['state_ids']);
+        } else {
+            $post_values['state_ids'] = "";
+        }
+        
         if (isset($post_values['update'])) {
             $server->update($post_values);
         }

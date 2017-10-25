@@ -24,7 +24,16 @@ CREATE TABLE `glpi_plugin_infoblox_servers` (
         `user` varchar(32) NOT NULL default 'admin',
         `password` varchar(32) NOT NULL default '',
         `wapi_version` char(5) NOT NULL default '2.6.1',
+        `state_ids` varchar(32) NOT NULL default 0,
+        `ipam` tinyint(1) NOT NULL default 0,
         `devices` tinyint(1) NOT NULL default 0,
         `dhcp` tinyint(1) NOT NULL default 0,
-        `dns` tinyint(1) NOT NULL default 0
+        `dns` tinyint(1) NOT NULL default 0,
+        `fqdns_id` int(11) NOT NULL default 0,
+        `is_ad_dns_zone` tinyint(1) NOT NULL default 0,
+        `computers` tinyint(1) NOT NULL default 0,
+        `printers` tinyint(1) NOT NULL default 0,
+        `peripherals` tinyint(1) NOT NULL default 0,
+        `networkequipments` tinyint(1) NOT NULL default 0,
+        `phones` tinyint(1) NOT NULL default 0
 )ENGINE=MyISAM  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;

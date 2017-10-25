@@ -1,5 +1,7 @@
 <?php
-
+/**
+ * @package InfobloxAPIQuery
+ */
 /*
  * Copyright (C) 2017 Javier Samaniego García <jsamaniegog@gmail.com>
  *
@@ -22,8 +24,9 @@
  * See: https://your.infoblox.server/api/doc/.
  *
  * @author Javier Samaniego García <jsamaniegog@gmail.com>
- * @version GIT: $Id$ Alpha but functional.
- * @example ./example.php 
+ * @version 0.0.1 Alpha but functional.
+ * @package InfobloxAPIQuery
+ * @example infoblox_api/example.php 
  */
 class Infoblox {
     
