@@ -114,6 +114,10 @@ class PluginInfobloxCron extends CommonDBTM {
                 $np = new NetworkPort();
                 $nps = $np->find("itemtype = '$asset' and items_id = " . $id_asset);
 
+                // initialize arrays (must be here, before NetworkPorts loop)
+                $ipv4addrs = array();
+                $ipv6addrs = array();
+                
                 foreach ($nps as $id_np => $np) {
                     $mac = $np['mac'];
 
@@ -125,6 +129,7 @@ class PluginInfobloxCron extends CommonDBTM {
                     $nn = new NetworkName();
                     $nns = $nn->find("itemtype = 'NetworkPort' and items_id = " . $id_np . " $andFqdns");
 
+                    // to use after
                     $originalName = $record['name'];
                     
                     foreach ($nns as $id_nn => $nn) {
@@ -146,11 +151,13 @@ class PluginInfobloxCron extends CommonDBTM {
                             }
                             
                             $record['aliases'][] = $alias['name'];
+                            
+                            $record['aliases'] = array_values(array_unique($record['aliases']));
                         }
                         
                         // set ip's
-                        $ipv4addrs = self::getIpsArrayForInfobloxQuery($id_nn, $mac, $configure_for_dhcp, '4');
-                        $ipv6addrs = self::getIpsArrayForInfobloxQuery($id_nn, $mac, $configure_for_dhcp, '6');
+                        $ipv4addrs = array_merge($ipv4addrs, self::getIpsArrayForInfobloxQuery($id_nn, $mac, $configure_for_dhcp, '4'));
+                        $ipv6addrs = array_merge($ipv6addrs, self::getIpsArrayForInfobloxQuery($id_nn, $mac, $configure_for_dhcp, '6'));
                         
                         if (!empty($ipv4addrs)) {
                             $record['ipv4addrs'] = $ipv4addrs;
