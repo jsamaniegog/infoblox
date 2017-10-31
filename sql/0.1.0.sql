@@ -29,11 +29,22 @@ CREATE TABLE `glpi_plugin_infoblox_servers` (
         `devices` tinyint(1) NOT NULL default 0,
         `dhcp` tinyint(1) NOT NULL default 0,
         `dns` tinyint(1) NOT NULL default 0,
+        `create_ptr` tinyint(1) NOT NULL default 0,
         `fqdns_id` int(11) NOT NULL default 0,
         `is_ad_dns_zone` tinyint(1) NOT NULL default 0,
+        `is_ad_dhcp` tinyint(1) NOT NULL default 0,
         `computers` tinyint(1) NOT NULL default 0,
         `printers` tinyint(1) NOT NULL default 0,
         `peripherals` tinyint(1) NOT NULL default 0,
         `networkequipments` tinyint(1) NOT NULL default 0,
         `phones` tinyint(1) NOT NULL default 0
+)ENGINE=MyISAM  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
+CREATE TABLE `glpi_plugin_infoblox_syncs` (
+        `id` int(11) NOT NULL PRIMARY KEY AUTO_INCREMENT,
+        `items_id` int(11) NOT,
+        `itemtype` varchar(100) NOT NULL,        
+        `synchronized` tinyint(1) NOT NULL default 0,
+        `datetime` datetime NOT NULL,
+        `error` varchar(300) default NULL
 )ENGINE=MyISAM  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;

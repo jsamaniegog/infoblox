@@ -62,16 +62,20 @@ class PluginInfobloxCron extends CommonDBTM {
      * @param InfobloxWapiQuery $infoblox
      * @param array $affected_entities
      * @param array $state_ids Array of state_id
-     * @param type $configure_for_dhcp
+     * @param bool $configure_for_dns 
+     * @param bool $configure_for_dhcp
+     * @param string $logPrefixError 
+     * @param array $assets
+     * @param bool $ipam If you want add hosts to manage the IP addresses.
      */
     private static function addAllHostToInfobloxHosts(CronTask $task, 
         InfobloxWapiQuery $infoblox, array $affected_entities, array $state_ids, 
         $fqdns_id, $configure_for_dns = true, $configure_for_dhcp = true, 
-        $logPrefixError = "Error: "
+        $logPrefixError = "Error: ", 
+        $assets = array('Computer', 'Phone', 'Peripheral', 'NetworkEquipment', 'Printer'),
+        $ipam = true, $dns = true, $dhcp = true, $create_ptr = true
     ) {
         $toReturn = true;
-
-        $assets = array('Computer', 'Phone', 'Peripheral', 'NetworkEquipment', 'Printer');
 
         $state_ids[] = "null";
         $state_ids[] = "0";
@@ -81,7 +85,7 @@ class PluginInfobloxCron extends CommonDBTM {
 
             $andFqdns = ($configure_for_dns and $fqdns_id != 0) ? "and fqdns_id = " . $fqdns_id : "" ;
             
-            // search for items that has a networkport
+            // search for items that has a networkport and networkname
             $records = $item->find(
                 "entities_id in (" . implode(",", $affected_entities) . ") "
                 . "and states_id in (" . implode(",", $state_ids) . ") "
@@ -90,7 +94,9 @@ class PluginInfobloxCron extends CommonDBTM {
                 . " WHERE np.entities_id in (" . implode(",", $affected_entities) . ") "
                 . " and np.itemtype = '$asset' "
                 . " and nn.itemtype = 'NetworkPort' and np.id = nn.items_id " . str_replace("fqdns_id", "nn.fqdns_id", $andFqdns)
-                . " and ip.itemtype = 'NetworkName' and nn.id = ip.items_id)"
+                . " and ip.itemtype = 'NetworkName' and nn.id = ip.items_id) "
+                . "and id not in (select items_id from glpi_plugin_infoblox_syncs where synchronized = 1 and itemtype = '$asset')"
+                //. " and name = 'hcuve05589'"
             );
 
             // search for ip and mac address
@@ -112,7 +118,7 @@ class PluginInfobloxCron extends CommonDBTM {
                 $record['device_description'] = $record['comment'];
                 
                 $np = new NetworkPort();
-                $nps = $np->find("itemtype = '$asset' and items_id = " . $id_asset);
+                $nps = $np->find("is_deleted = 0 and itemtype = '$asset' and items_id = " . $id_asset);
 
                 // initialize arrays (must be here, before NetworkPorts loop)
                 $ipv4addrs = array();
@@ -127,17 +133,24 @@ class PluginInfobloxCron extends CommonDBTM {
                     }
 
                     $nn = new NetworkName();
-                    $nns = $nn->find("itemtype = 'NetworkPort' and items_id = " . $id_np . " $andFqdns");
+                    $nns = $nn->find("is_deleted = 0 and itemtype = 'NetworkPort' and items_id = " . $id_np . " $andFqdns");
 
                     // to use after
                     $originalName = $record['name'];
                     
                     foreach ($nns as $id_nn => $nn) {
+                        
+                        $networkName = $originalName;
+                        
+                        if ($nn['name'] != "") {
+                            $networkName = $nn['name'];
+                        }
+                        
                         // set name based on fqdn
                         if ($configure_for_dns and $fqdns_id != 0) {
                             $fqdns = new FQDN();
                             if ($fqdns->getFromDB($fqdns_id)) {
-                                $record['name'] = $originalName . "." . $fqdns->getField("fqdn");
+                                $record['name'] = $networkName . "." . $fqdns->getField("fqdn");
                             }
                         }
                         
@@ -168,21 +181,82 @@ class PluginInfobloxCron extends CommonDBTM {
 
                         // add or udpate the host
                         if (!empty($ipv4addrs) or ! empty($ipv6addrs)) {
-                            $result = self::addInfobloxHost(
-                                    $infoblox, $record, $configure_for_dns, $configure_for_dhcp
-                            );
+                            // add hosts
+                            if ($ipam == true){
+                                $result = self::addInfobloxHost(
+                                        $infoblox, $record, $configure_for_dns
+                                );
+                                
+                                $toReturn = self::checkResult($result, $task, $infoblox, $logPrefixError, $record['name'], $id_asset, $asset);
+                            }
+                            
+                            // add A record to dns (only if it hasn't do it by host addition)
+                            if ($toReturn != false and (($ipam == false and $dns == true) 
+                                or ($ipam == true and $configure_for_dns == false and $dns == true))) {
+                                
+                                // search for fqdn associated with the name
+                                // if there isn't we don't add records
+                                if ($nn['fqdns_id'] != '0') {
+                                    $fqdns = new FQDN();
+                                    $fqdns->getFromDB($nn['fqdns_id']);
+                                    $record['name'] = $networkName . "." . $fqdns->getField("fqdn");
+                                    
+                                    // ipv4
+                                    $result = self::addInfobloxA(
+                                            $infoblox, $record
+                                    );
+                                    
+                                    $toReturn = self::checkResult($result, $task, $infoblox, $logPrefixError, $record['name'], $id_asset, $asset);
+                                    
+                                    // ipv6
+                                    if ($toReturn != false) {
+                                        $result = self::addInfobloxAAAA(
+                                                $infoblox, $record
+                                        );
+
+                                        $toReturn = self::checkResult($result, $task, $infoblox, $logPrefixError, $record['name'], $id_asset, $asset);
+                                    }
+                                    
+                                    // cnames
+                                    if ($toReturn != false) {
+                                        $result = self::addInfobloxCNAME(
+                                                $infoblox, $record
+                                        );
+
+                                        $toReturn = self::checkResult($result, $task, $infoblox, $logPrefixError, $record['name'], $id_asset, $asset);
+                                    }
+                                    
+                                    // ptr
+                                    if ($toReturn != false and $create_ptr) {
+                                        $result = self::addInfobloxPTR(
+                                                $infoblox, $record
+                                        );
+
+                                        $toReturn = self::checkResult($result, $task, $infoblox, $logPrefixError, $record['name'], $id_asset, $asset);
+                                    }
+                                }
+                                
+                            }
+                            
+                            // add dhcp record
+                            if ($toReturn != false and (($ipam == false and $dhcp == true) 
+                                or ($ipam == true and $configure_for_dhcp == false and $dhcp == true))) {
+                                $result = self::addInfobloxFixedaddress(
+                                        $infoblox, $record
+                                );
+                                
+                                $toReturn = self::checkResult($result, $task, $infoblox, $logPrefixError, $record['name'], $id_asset, $asset);
+                            }
                         }
 
-                        if (isset($result) and $result === false) {
-                            $toReturn = false;
-                            $task->log($logPrefixError . Html::link($record['name'], Computer::getFormURLWithID($id_asset, true)) . " - " . $infoblox->getError());
-                        }
+                        //$toReturn = self::checkResult($result, $task, $infoblox, $logPrefixError, $record['name'], $id_asset, $asset);
 
                         // todo: eliminar estas líneas
                         if (isset($result)) {
                             $count = (!isset($count)) ? 0 : $count + 1;
-                            if ($count > 2)
+                            if ($count >= 1) {
                                 return $toReturn;
+                            }
                         }
                     }
                 }
@@ -190,6 +264,315 @@ class PluginInfobloxCron extends CommonDBTM {
         }
 
         return $toReturn;
+    }
+    
+    private static function checkResult($result, $task, $infoblox, $logPrefixError, $assetName, $id_asset, $asset) {
+        $toReturn = true;
+        
+        // check the result, if it has an error we log it
+        if (isset($result) and $result === false) {
+            $toReturn = false;
+
+            // log error for crontask
+            $task->log($logPrefixError . Html::link(
+                    $assetName, 
+                    $asset::getFormURLWithID($id_asset, true)
+                    ) . " - " . $infoblox->getError()); 
+            // sync log table of infoblox plugin
+            self::syncLog($id_asset, $asset, false, $logPrefixError . $infoblox->getError());
+
+        } else{
+            self::syncLog($id_asset, $asset, true);
+        }
+        
+        return $toReturn;
+    }
+    
+    /**
+     * Return the method and asign the reference to the object if exists.
+     * @param InfobloxWapiQuery $infoblox
+     * @param string $object Infoblox object (example: record:host)
+     * @param string $value Value to search in the (unique) field
+     * @param string $name Name of the (unique) field to search
+     * @return string
+     * @throws Exception
+     */
+    private static function getMethodToSend(InfobloxWapiQuery $infoblox, &$object, $value, $field = "name") {
+        // set the method to add
+        $method = "POST";
+
+        if (!isset($value) or $value == "") {
+            throw new Exception(__METHOD__ . ": Arguments error");
+        }
+        
+        // search for host to update
+        $result = $infoblox->query(
+            $object, array(
+            $field => strtolower($value)
+            )
+        );
+
+        // set the object to add or update
+        if ($result) {
+            // set the method to update
+            $method = "PUT";
+            // and set the host reference to update
+            $object = $result[0]['_ref'];
+        }
+        
+        return $method;
+    }
+    
+    private static function addOrUpdate(InfobloxWapiQuery $infoblox, $object, $fields, $method = "GET", $function = null) {
+        $fields = self::trimArray($fields);
+        return $infoblox->query(
+                $object, $fields, $function, $method
+        );
+    }
+    
+    /**
+     * Generic add or update infoblox.
+     * @param InfobloxWapiQuery $infoblox
+     * @param string $object
+     * @param array $hostData
+     * @param string $fieldToSearch (Unique) field in which to search
+     * @return type
+     */
+    private static function addInfobloxRecord(InfobloxWapiQuery $infoblox, $object, $fields, $fieldToSearch = "name") {
+        $method = self::getMethodToSend($infoblox, $object, strtolower($fields[$fieldToSearch]), $fieldToSearch);
+
+        return self::addOrUpdate($infoblox, $object, $fields, $method);
+    }
+    
+    /**
+     * Add or update a single host to infoblox.
+     * @param InfobloxWapiQuery $infoblox
+     * @param array $hostData
+     * @param bool $configure_for_dns
+     */
+    private static function addInfobloxHost(
+        InfobloxWapiQuery $infoblox, 
+        array $hostData, 
+        $configure_for_dns = true
+    ) {
+        // fields to add or update
+        $fields = array(
+            "name" => strtolower($hostData['name']),
+            "aliases" => $hostData['aliases'],
+            "configure_for_dns" => $configure_for_dns,
+            "device_type" => trim($hostData['device_type']),
+            "device_vendor" => trim($hostData['device_vendor']),
+            "device_location" => trim($hostData['device_location']),
+            "device_description" => trim($hostData['device_comment'])
+        );
+        
+        // the arrays of ip's for add or update
+        if (isset($hostData['ipv4addrs'])) {
+            $fields['ipv4addrs'] = $hostData['ipv4addrs'];
+        }
+        if (isset($hostData['ipv6addrs'])) {
+            $fields['ipv6addrs'] = $hostData['ipv6addrs'];
+        }
+        
+        return self::addInfobloxRecord($infoblox, "record:host", $fields);
+    }
+
+    /**
+     * Add or update a single A record to infoblox.
+     * @param InfobloxWapiQuery $infoblox
+     * @param array $hostData
+     */
+    private static function addInfobloxA(InfobloxWapiQuery $infoblox, array $hostData) {
+        $toReturn = true;
+        
+        foreach ($hostData['ipv4addrs'] as $ipv4addr) {
+            // fields to add or update
+            $fields = array(
+                "name" => strtolower($hostData['name']),
+                "ipv4addr" => $ipv4addr['ipv4addr']
+            );
+            
+            $toReturn = self::addInfobloxRecord($infoblox, "record:a", $fields);
+            
+            if (!$toReturn) {
+                return $toReturn;
+            }
+        }
+        
+        return $toReturn;
+    }
+    
+    /**
+     * Add or update a single CNAME record to infoblox.
+     * @param InfobloxWapiQuery $infoblox
+     * @param array $hostData
+     */
+    private static function addInfobloxCNAME(InfobloxWapiQuery $infoblox, array $hostData) {
+        $toReturn = true;
+        
+        
+        // fields to add or update
+        foreach ($hostData['aliases'] as $alias) {
+            $fields = array(
+                "name" => strtolower($alias),
+                "canonical" => strtolower($hostData['name'])
+            );
+            
+            $toReturn = self::addInfobloxRecord($infoblox, "record:cname", $fields);
+            
+            if (!$toReturn) {
+                return $toReturn;
+            }
+        }
+        
+        return $toReturn;
+    }
+    
+    /**
+     * Add or update a single PTR record to infoblox.
+     * @param InfobloxWapiQuery $infoblox
+     * @param array $hostData
+     */
+    private static function addInfobloxPTR(InfobloxWapiQuery $infoblox, array $hostData) {
+        $toReturn = true;
+        
+        list(,$domain) = explode(".", $hostData['name'], 2);
+        
+        foreach ($hostData['ipv4addrs'] as $ipv4addr) {
+            //list($a, $b, $c, $d) = explode(".", $ipv4addr['ipv4addr']);
+            
+            // fields to add or update
+            $fields = array(
+                //"name" => "$d.$c.$b.$a",
+                "ipv4addr" => $ipv4addr['ipv4addr'],
+                "ptrdname" => $domain
+            );
+            
+            $toReturn = self::addInfobloxRecord($infoblox, "record:ptr", $fields, "ipv4addr");
+            
+            if (!$toReturn) {
+                return $toReturn;
+            }
+        }
+        
+        foreach ($hostData['ipv6addrs'] as $ipv4addr) {
+            //list($a, $b, $c, $d) = explode(".", $ipv4addr['ipv6addr']);
+            
+            // fields to add or update
+            $fields = array(
+                //"name" => "$d.$c.$b.$a",
+                "ipv6addr" => $ipv4addr['ipv6addr'],
+                "ptrdname" => $domain
+            );
+            
+            $toReturn = self::addInfobloxRecord($infoblox, "record:ptr", $fields, "ipv6addr");
+            
+            if (!$toReturn) {
+                return $toReturn;
+            }
+        }
+        
+        return $toReturn;
+    }
+    
+    /**
+     * Add or update a single PTR record to infoblox.
+     * @param InfobloxWapiQuery $infoblox
+     * @param array $hostData
+     */
+    private static function addInfobloxFixedaddress(InfobloxWapiQuery $infoblox, array $hostData) {
+        $toReturn = true;
+        
+        foreach ($hostData['ipv4addrs'] as $ipv4addr) {
+            $fields = array(
+                "name" => strtolower($hostData['name']),
+                "ipv4addr" => $ipv4addr['ipv4addr'],
+                "mac" => $ipv4addr['mac']
+            );
+            
+            $toReturn = self::addInfobloxRecord($infoblox, "fixedaddress", $fields, "ipv4addr");
+            
+            if (!$toReturn) {
+                return $toReturn;
+            }
+        }
+        
+        foreach ($hostData['ipv6addrs'] as $ipv6addr) {
+            $fields = array(
+                "name" => strtolower($hostData['name']),
+                "ipv6addr" => $ipv6addr['ipv6addr'],
+                "duid" => $ipv6addr['duid']
+            );
+            
+            $toReturn = self::addInfobloxRecord($infoblox, "ipv6fixedaddress", $fields, "ipv6addr");
+            
+            if (!$toReturn) {
+                return $toReturn;
+            }
+        }
+        
+        return $toReturn;
+    }
+    
+    /**
+     * Add or update a single AAAA record to infoblox.
+     * @param InfobloxWapiQuery $infoblox
+     * @param array $hostData
+     */
+    private static function addInfobloxAAAA(InfobloxWapiQuery $infoblox, array $hostData) {
+        $toReturn = true;
+        
+        foreach ($hostData['ipv6addrs'] as $ipv6addr) {
+            // fields to add or update
+            $fields = array(
+                "name" => strtolower($hostData['name']),
+                "ipv6addr" => $ipv6addr['ipv6addr']
+            );
+            
+            $toReturn = self::addInfobloxRecord($infoblox, "record:aaaa", $fields);
+            
+            if (!$toReturn) {
+                return $toReturn;
+            }
+        }
+        
+        return $toReturn;
+    }
+    
+    /**
+     * Add or update sync log.
+     * @param int $id_asset
+     * @param string $asset
+     * @param bool $syncronized
+     * @param string $error
+     */
+    private static function syncLog($id_asset, $asset, $syncronized, $error = null) {
+        if ($error == null) {
+            $error = 'NULL';
+        }
+        
+        $sync = new PluginInfobloxSync();
+        if ($sync->getFromDBByCrit(array(
+            "items_id" => $id_asset,
+            "itemtype" => $asset
+        ))) {
+            $sync->fields['synchronized'] = $syncronized;
+            $sync->fields['datetime'] = date("Y-m-d H:i:s");
+            $sync->fields['error'] = $error;
+            $sync->updateInDB(array(
+                'synchronized',
+                'datetime',
+                'error'
+            ));
+        } else {
+            $sync->add(array(
+                'items_id'     => $id_asset,
+                'itemtype'     => $asset,
+                'synchronized' => $syncronized,
+                'datetime'     => date("Y-m-d H:i:s"),
+                'error'        => $error
+            ));
+        }
     }
 
     /**
@@ -205,7 +588,7 @@ class PluginInfobloxCron extends CommonDBTM {
 
         $toReturn = array();
 
-        $ips = $ip->find("itemtype = 'NetworkName' and items_id = $id_nn and version = $version");
+        $ips = $ip->find("is_deleted = 0 and itemtype = 'NetworkName' and items_id = $id_nn and version = $version");
         foreach ($ips as $ip) {
 
             if ($ip['name'] == '0.0.0.0'
@@ -215,94 +598,26 @@ class PluginInfobloxCron extends CommonDBTM {
                 continue;
             }
 
-            $toReturn[] = array(
-                "ipv" . $version . "addr" => $ip['name'],
-                "mac" => $mac,
-                // be careful, this options generate a new record if is changed, by default is true
-                "configure_for_dhcp" => $configure_for_dhcp
-            );
+            if ($version == '4') {
+                $toReturn[] = array(
+                    "ipv" . $version . "addr" => $ip['name'],
+                    "mac" => $mac,
+                    // be careful, this options generate a new record if is changed, by default is true
+                    "configure_for_dhcp" => $configure_for_dhcp
+                );
+            } elseif ($version == '6') {
+                $toReturn[] = array(
+                    "ipv" . $version . "addr" => $ip['name'],
+                    "duid" => $mac,
+                    // be careful, this options generate a new record if is changed, by default is true
+                    "configure_for_dhcp" => $configure_for_dhcp
+                );
+            }
         }
 
         return $toReturn;
     }
-
-    /* private static function arrayReplaceByField($arrayBase, $arrayForReplace, $fieldToCompare) {
-      $replace = false;
-
-      foreach ($arrayBase as $indexBase => $valueBase) {
-      foreach ($arrayForReplace as $indexForReplace => $valueForReplace) {
-
-      if (is_array($valueForReplace)) {
-      $valueBase = self::arrayReplaceByField($valueBase, $valueForReplace, $fieldToCompare);
-      }
-
-      if ($valueBase[$fieldToCompare] == $valueForReplace[$fieldToCompare]) {
-      $replace = true;
-      }
-
-      if ($replace === true) {
-      $arrayBase[$indexBase] = $arrayForReplace[$indexForReplace];
-      return $arrayBase;
-      }
-      }
-      }
-
-      return $arrayBase;
-      } */
-
-    /**
-     * Add or update a single host to infoblox.
-     * @param InfobloxWapiQuery $infoblox
-     * @param array $hostData
-     * @param type $configure_for_dhcp
-     */
-    private static function addInfobloxHost(InfobloxWapiQuery $infoblox, array $hostData, $configure_for_dns = true, $configure_for_dhcp = true
-    ) {
-        // search for host to update
-        $result = $infoblox->query(
-            "record:host", array(
-            "name" => strtolower($hostData['name'])
-            )
-        );
-
-        // set the method to add
-        $method = "POST";
-
-        // set the object to add or update
-        $hostRecord = "record:host";
-        if ($result) {
-            // set the method to update
-            $method = "PUT";
-            // and set the host reference to update
-            $hostRecord = $result[0]['_ref'];
-        }
-
-        // the fields to add or update
-        $fields = array(
-            "name" => strtolower($hostData['name']),
-            "aliases" => $hostData['aliases'],
-            "configure_for_dns" => $configure_for_dns,
-            "device_type" => trim($hostData['device_type']),
-            "device_vendor" => trim($hostData['device_vendor']),
-            "device_location" => trim($hostData['device_location']),
-            "device_description" => trim($hostData['device_comment'])
-        );
-
-        // the arrays of ip's for add
-        if (isset($hostData['ipv4addrs'])) {
-            $fields['ipv4addrs'] = $hostData['ipv4addrs'];
-        }
-        if (isset($hostData['ipv6addrs'])) {
-            $fields['ipv6addrs'] = $hostData['ipv6addrs'];
-        }
-
-        // add or update host
-        $fields = self::trimArray($fields);
-        return $infoblox->query(
-                $hostRecord, $fields, null, $method
-        );
-    }
-
+    
     /**
      * 
      * @param array $array
@@ -344,7 +659,7 @@ class PluginInfobloxCron extends CommonDBTM {
      * @param array $server
      * @return boolean
      */
-    private static function IsThereAnythingToDo(array $server) {
+    private static function isThereAnythingToDo(array $server) {
         if ($server['ipam'] == '0'
             and $server['devices'] == '0'
             and $server['dhcp'] == '0'
@@ -375,12 +690,11 @@ class PluginInfobloxCron extends CommonDBTM {
         foreach ($infoblox_servers as $server) {
             // for logs
             $logPrefix = "[" . $server['name'] . "] ";
-            $logPrefixError = $logPrefix . "Error: ";
 
             $task->addVolume(1);
 
             // if import options are not activated
-            if (!self::IsThereAnythingToDo($server)) {
+            if (!self::isThereAnythingToDo($server)) {
                 $task->log($logPrefix . __('Nothing to do', 'infoblox'));
                 continue;
             }
@@ -389,7 +703,10 @@ class PluginInfobloxCron extends CommonDBTM {
                 $server['address'], $server['user'], $server['password'], $server['wapi_version']
             );
 
-            $configure_for_dhcp = ($server['dhcp'] == '1') ?
+            // NOTE: Microsoft servers cannot be updated when you add a host 
+            // you must do it independently. For that reason is the option 
+            // "is_ad_dns_zone".
+            $configure_for_dhcp = ($server['dhcp'] == '1' and $server['is_ad_dhcp'] == '0') ?
                 true :
                 false;
 
@@ -397,67 +714,62 @@ class PluginInfobloxCron extends CommonDBTM {
                 true :
                 false;
 
-            // import hosts
-            if ($server['ipam'] == '1') {
-                $result = self::addAllHostToInfobloxHosts(
-                    $task, 
-                    $infoblox, 
-                    $server['affected_entities'], 
-                    PluginInfobloxServer::getStateIds($server['id']), 
-                    $server['fqdns_id'],
-                    $configure_for_dns, 
-                    $configure_for_dhcp, 
-                    $logPrefixError
-                );
+            $ipam = ($server['ipam'] == '1') ? true : false;
+            $dns = ($server['dns'] == '1') ? true : false;
+            $dhcp = ($server['dhcp'] == '1') ? true : false;
+            $create_ptr = ($server['create_ptr'] == '1') ? true : false;
+            
+            // hosts
+            $result = self::addAllHostToInfobloxHosts(
+                $task, 
+                $infoblox, 
+                $server['affected_entities'], 
+                PluginInfobloxServer::getStateIds($server['id']), 
+                $server['fqdns_id'],
+                $configure_for_dns, 
+                $configure_for_dhcp, 
+                $logPrefix,
+                self::getAssetsToSync($server),
+                $ipam, $dns, $dhcp, $create_ptr
+            );
 
-                if (!$result) {
-                    $toReturn = false;
-                }
+            if (!$result) {
+                $toReturn = false;
             }
 
-            // import devices
+            // devices
             if ($server['devices'] == '1') {
-                
-            }
-
-            // import dns
-            if ($server['dns'] == '1') {
-                
-            }
-
-            // import dhcp
-            if ($server['dhcp'] == '1') {
-
-                /* $result = $infoblox->query("network");
-
-                  if ($result === false) {
-                  $task->log($logPrefixError . $infoblox->getError());
-                  }
-
-                  foreach ($result as $network) {
-                  $network['_ref'];    // referencia al objeto
-                  $network['comment']; // nombre de la red
-                  $network['network']; // red en formato 0.0.0.0/00
-                  // get next available IP
-                  // Example to get 5 free IPs:
-                  $result = $infoblox->query($network['_ref'], array("num" => 5), "next_available_ip", "POST");
-
-                  //$result = $infoblox->query($network['_ref'], array(), "next_available_ip", "POST");
-                  if ($result === false) {
-                  $task->log($logPrefixError . $infoblox->getError());
-                  }
-                  } */
-
-                /* if (is_array($result) and empty($result)) {
-                  $task->log($logPrefix . __('No DHCP results returned by server', 'infoblox'));
-
-                  } elseif (!$result) {
-                  $task->log($logPrefixError . $infoblox->getError());
-                  } */
+                // todo: sync network devices
             }
         }
 
         return $toReturn;
     }
 
+    /**
+     * Return configured assets to sync
+     * @param array $server Asoc array record of infoblox server table.
+     */
+    static private function getAssetsToSync(array $server) {
+        $assets = array();
+        
+        if ($server['computers']) {
+            $assets[] = 'Computer';
+        }
+        if ($server['phones']) {
+            $assets[] = 'Phone';
+        }
+        if ($server['peripherals']) {
+            $assets[] = 'Peripheral';
+        }
+        if ($server['networkequipments']) {
+            $assets[] = 'NetworkEquipment';
+        }
+        if ($server['printers']) {
+            $assets[] = 'Printer';
+        }
+        
+        return $assets;
+    }
+    
 }

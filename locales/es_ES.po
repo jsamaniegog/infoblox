@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Complemento Infoblox para GLPI\n"
-"POT-Creation-Date: 2017-10-24 07:35+0200\n"
-"PO-Revision-Date: 2017-10-24 07:39+0200\n"
+"POT-Creation-Date: 2017-10-27 14:39+0200\n"
+"PO-Revision-Date: 2017-10-27 14:46+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: es_ES\n"
@@ -23,7 +23,7 @@ msgstr "No autorizado"
 msgid "Saving configuration..."
 msgstr "Guardando configuración..."
 
-#: front/config.form.php:40 front/server.form.php:50
+#: front/config.form.php:40 front/server.form.php:54
 msgid "Error on save"
 msgstr "Error al guardar"
 
@@ -35,7 +35,7 @@ msgstr "Configuración guardada"
 msgid "Infoblox syncronization."
 msgstr "Sincronización de Infoblox."
 
-#: inc/config.class.php:38 setup.php:48
+#: inc/config.class.php:38 setup.php:50
 msgid "Infoblox"
 msgstr "Infoblox"
 
@@ -55,13 +55,41 @@ msgstr "Servidores"
 msgid "Infoblox Cron"
 msgstr "Cron Infoblox"
 
-#: inc/cron.class.php:235
+#: inc/cron.class.php:397
 msgid "No Infoblox servers configured."
 msgstr "No hay servidores de Infoblox configurados."
 
-#: inc/cron.class.php:250
+#: inc/cron.class.php:411
 msgid "Nothing to do"
 msgstr "Nada que hacer"
+
+#: inc/item.class.php:105
+msgid "Synchronized"
+msgstr "Sincronizado"
+
+#: inc/item.class.php:108
+msgid "Yes"
+msgstr ""
+
+#: inc/item.class.php:109
+msgid "No"
+msgstr ""
+
+#: inc/item.class.php:113
+msgid "Date"
+msgstr "Fecha"
+
+#: inc/item.class.php:117
+msgid "Not registered"
+msgstr "No registrado"
+
+#: inc/item.class.php:121
+msgid "Error"
+msgstr "Error"
+
+#: inc/item.class.php:125
+msgid "No error"
+msgstr "Sin error"
 
 #: inc/server.class.php:35 inc/server.class.php:45
 msgid "Infoblox Server"
@@ -111,83 +139,134 @@ msgstr "\" siempre es buscado)"
 
 #: inc/server.class.php:148
 msgid " Zone Name / DNS Sufix"
-msgstr "Nombre de Zona / Sufijo DNS"
+msgstr " Nombre de Zona / Sufijo DNS"
 
-#: inc/server.class.php:150
-msgid "Example: domain.com"
-msgstr "Ejemplo: dominio.com"
+#: inc/server.class.php:151
+msgid "If you select"
+msgstr "Si selecciona la opción"
 
-#: inc/server.class.php:155
-msgid "Active Directory options"
-msgstr "Opciones de Directorio Activo"
+#: inc/server.class.php:151
+msgid "option, all will be synchronized."
+msgstr ", se sincronizará todo."
 
-#: inc/server.class.php:159
-msgid " It is an Active Directory zone"
-msgstr "Esta es una zona de Directorio Activo"
+#: inc/server.class.php:156
+msgid "Microsoft server options"
+msgstr "Opciones para servidores Microsoft"
 
-#: inc/server.class.php:166
+#: inc/server.class.php:167
+msgid "It is a Microsoft DNS zone"
+msgstr "Es una zona DNS de un servidor Microsoft"
+
+#: inc/server.class.php:178
+msgid "It is a Microsoft DHCP server"
+msgstr "Es un servidor de DHCP de Microsoft"
+
+#: inc/server.class.php:180
+msgid ""
+"Microsoft DNS and DHCP servers can not be updated when you add a host (IPAM "
+"option), you must do it independently. Check this option to do so."
+msgstr ""
+"Los servidores Microsoft DNS y DHCP no se pueden actualizar cuando agrega un "
+"host (opción de IPAM), debe hacerlo de forma independiente. Marque esta "
+"opción para hacerlo."
+
+#: inc/server.class.php:188
 msgid "Import and synchronization options"
 msgstr "Opciones de importación y sincronización"
 
-#: inc/server.class.php:175
-msgid " Devices<br><br>"
-msgstr " Dispositivos<br><br>"
+#: inc/server.class.php:194
+msgid "&nbsp;The host information and its IP address."
+msgstr "&nbsp;La información del host y sus direcciones IP."
 
-#: inc/server.class.php:192
+#: inc/server.class.php:200
+msgid "Devices"
+msgstr "Dispositivos"
+
+#: inc/server.class.php:202
+msgid ""
+"&nbsp;Network Equipments (Only if you have configured Infoblox Network "
+"Insight)"
+msgstr ""
+"&nbsp;Equipamiento de Red (Solo si has configurado Infoblox Network Insight)"
+
+#: inc/server.class.php:221
+msgid "Create associated PTR record"
+msgstr "Crear registro PTR asociado"
+
+#: inc/server.class.php:222
+msgid ""
+"This only works if the IPAM option is disabled or IPAM is active and \"It is "
+"a Microsoft DNS zone\" too. This is because for hosts adding this option is "
+"getted from the zone configuration."
+msgstr ""
+"Esto solo funciona si la opción IPAM está deshabilitada o IPAM está activo y "
+"\"Es una zona DNS de Microsoft\" también. Esto se debe a que los hosts "
+"agregan esta opción desde la configuración de la zona."
+
+#: inc/server.class.php:232
 msgid "Asset synchronization options"
 msgstr "Opciones de sincronización de activos"
 
-#: inc/server.class.php:196
+#: inc/server.class.php:236
 msgid "Computer"
 msgid_plural "Computers"
 msgstr[0] "Computador"
 msgstr[1] "Computadores"
 
-#: inc/server.class.php:201
+#: inc/server.class.php:241
 msgid "Printer"
 msgid_plural "Printers"
 msgstr[0] ""
 msgstr[1] ""
 
-#: inc/server.class.php:201
+#: inc/server.class.php:241
 msgid " "
 msgstr ""
 
-#: inc/server.class.php:206
+#: inc/server.class.php:246
 msgid "Device"
 msgid_plural "Devicess"
 msgstr[0] "Dispositivo"
 msgstr[1] "Dispositivos"
 
-#: inc/server.class.php:211
+#: inc/server.class.php:251
 msgid "Phone"
 msgid_plural "Phones"
 msgstr[0] ""
 msgstr[1] ""
 
-#: inc/server.class.php:216
+#: inc/server.class.php:256
 msgid "Network device"
 msgid_plural "Network devices"
 msgstr[0] ""
 msgstr[1] ""
 
-#: setup.php:62
+#: setup.php:64
 msgid "This plugin requires Linux OS."
 msgstr "Este complemento requiere SO Linux."
 
-#: setup.php:67
+#: setup.php:69
 msgid "This plugin requires GLPI >= 9.1"
 msgstr "Este complemento requiere GLPI >= 9.1"
 
-#: setup.php:88
+#: setup.php:90
 msgid "Installed / not configured"
 msgstr "Instalado / no configurado"
+
+#~ msgid "Example: domain.com"
+#~ msgstr "Ejemplo: dominio.com"
+
+#~ msgid "Active Directory options"
+#~ msgstr "Opciones de Directorio Activo"
+
+#~ msgid " It is an Active Directory zone"
+#~ msgstr "Esta es una zona de Directorio Activo"
+
+#~ msgid " Devices<br><br>"
+#~ msgstr " Dispositivos<br><br>"
 
 #~ msgid "No DHCP results returned by server"
 #~ msgstr "No hay resultados DHCP devueltos por el servidor"
 
 #~ msgid "Import options"
 #~ msgstr "Opciones de importación"
-
-#~ msgid "Unknown error"
-#~ msgstr "Error desconocido"

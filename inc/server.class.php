@@ -153,12 +153,33 @@ class PluginInfobloxServer extends CommonDBTM {
         echo "</td></tr><tr><td colspan='2'>";
         
         // AD options
-        echo __('Active Directory options', 'infoblox') . "</td><td colspan='2'>";
-        $rand = Dropdown::showYesNo('is_ad_dns_zone', $this->fields['is_ad_dns_zone'], -1, array('use_checkbox'=>true));
+        echo __('Microsoft server options', 'infoblox') . "</td><td colspan='2'>";
+        $rand = Dropdown::showYesNo(
+            'is_ad_dns_zone', 
+            $this->fields['is_ad_dns_zone'], 
+            -1, 
+            array('use_checkbox'=>true)
+        );
         echo "<label ";
-        echo "for='dropdown_is_ad_dns_zone$rand' title='If the zone is an A.D. zone and you do not check this box you will get an error by the server'>";
-        echo __(' It is an Active Directory zone', 'infoblox') . '<br><br>';
-        echo "</label>";
+        echo "for='dropdown_is_ad_dns_zone$rand' title='If the DNS zone is "
+            . "managed by a Microsoft server and you do not check this box you "
+            . "will get an error.'>";
+        echo '&nbsp;' . __('It is a Microsoft DNS zone', 'infoblox');
+        echo "</label><br><br>";
+        $rand = Dropdown::showYesNo(
+            'is_ad_dhcp', 
+            $this->fields['is_ad_dhcp'], 
+            -1, 
+            array('use_checkbox'=>true)
+        );
+        echo "<label ";
+        echo "for='dropdown_is_ad_dhcp$rand' title='If the DHCP is a Microsoft "
+            . "server and you do not check this box you will get an error.'>";
+        echo '&nbsp;' . __('It is a Microsoft DHCP server', 'infoblox');
+        echo "</label><br>";
+        echo "<b style='color: LightGrey;'>" . __('Microsoft DNS and DHCP'
+            . ' servers can not be updated when you add a host (IPAM option), you must do it '
+            . 'independently. Check this option to do so.', 'infoblox') . "</b><br><br>";
         
         echo "</td></tr><td colspan='4'><hr width='100%'>";
         echo "</td></tr><tr><td colspan='2'>";
@@ -168,22 +189,40 @@ class PluginInfobloxServer extends CommonDBTM {
         $rand = Dropdown::showYesNo('ipam', $this->fields['ipam'], -1, array('use_checkbox'=>true));
         echo "<label ";
         echo "for='dropdown_ipam$rand'>";
-        echo ' IPAM<br><br>';
+        echo ' IPAM';
+        echo "<b style='color: LightGrey;'>" 
+            . __('&nbsp;The host information and its IP address.', 'infoblox') 
+            . "</b><br><br>";
         echo "</label>";
         $rand = Dropdown::showYesNo('devices', $this->fields['devices'], -1, array('use_checkbox'=>true));
         echo "<label ";
         echo "for='dropdown_devices$rand'>";
-        echo __(' Devices<br><br>', 'infoblox');
+        echo '&nbsp;' . __('Devices', 'infoblox');
+        echo "<b style='color: LightGrey;'>" 
+            . __('&nbsp;Network Equipments (Only if you have configured '
+                . 'Infoblox Network Insight)', 'infoblox') . "</b><br><br>";
         echo "</label>";
         $rand = Dropdown::showYesNo('dhcp', $this->fields['dhcp'], -1, array('use_checkbox'=>true));
         echo "<label ";
         echo "for='dropdown_dhcp$rand'>";
-        echo ' DHCP<br><br>';
+        echo '&nbsp;DHCP';
+        echo "<br><br>";
         echo "</label>";
         $rand = Dropdown::showYesNo('dns', $this->fields['dns'], -1, array('use_checkbox'=>true));
         echo "<label ";
         echo "for='dropdown_dns$rand'>";
-        echo ' DNS';
+        echo '&nbsp;DNS';
+        echo "<br>";
+        echo "</label>";
+        echo "&nbsp;&nbsp;&nbsp;&nbsp;";
+        $rand = Dropdown::showYesNo('create_ptr', $this->fields['create_ptr'], -1, array('use_checkbox'=>true));
+        echo "<label ";
+        echo "for='dropdown_create_ptr$rand'>";
+        echo '&nbsp;' . __('Create associated PTR record', 'infoblox');
+        echo "<b style='color: LightGrey;'>&nbsp;" . __('This only works if the'
+            . ' IPAM option is disabled or IPAM is active and "It is a '
+            . 'Microsoft DNS zone" too. This is because for hosts adding this '
+            . 'option is getted from the zone configuration.', 'infoblox') . "</b><br><br>";
         echo "</label>";
         
         echo "</td></tr><td colspan='4'><hr width='100%'>";

@@ -27,6 +27,8 @@ function plugin_init_infoblox() {
 
     Plugin::registerClass('PluginInfobloxConfig', array('addtabon' => 'Config'));
     Plugin::registerClass('PluginInfobloxServer');
+    
+    Plugin::registerClass('PluginInfobloxItem', array('addtabon' => array('Computer')));
 
     // Config page (muestra el acceso en el menu superior, en la parte de configuración)
     if (Session::haveRight('config', UPDATE)) {
