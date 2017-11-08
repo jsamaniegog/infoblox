@@ -254,7 +254,7 @@ class PluginInfobloxCron extends CommonDBTM {
 
                         // Host number to sync
                         if (isset($result)) {
-                            $count = (!isset($count)) ? 0 : $count + 1;
+                            $count = (!isset($count)) ? 1 : $count + 1;
                             if ($count >= $hostNumberToSync) {
                                 return $toReturn;
                             }
@@ -267,6 +267,18 @@ class PluginInfobloxCron extends CommonDBTM {
         return $toReturn;
     }
     
+    /**
+     * Check result obtained from infoblox WAPI. Writes in syncLog table of this
+     * plugin and in log of crontask if has an error.
+     * @param type $result
+     * @param type $task
+     * @param type $infoblox
+     * @param type $logPrefixError
+     * @param type $assetName
+     * @param type $id_asset
+     * @param type $asset
+     * @return boolean
+     */
     private static function checkResult($result, $task, $infoblox, $logPrefixError, $assetName, $id_asset, $asset) {
         $toReturn = true;
         
@@ -621,8 +633,8 @@ class PluginInfobloxCron extends CommonDBTM {
     
     /**
      * 
-     * @param array $array
-     * @param bool $filter if the empty values must be filtered(unset) of the array.
+     * @param array $array Array to trim.
+     * @param bool $filter If the empty values must be filtered(unset) of the array.
      * @return array
      * @throws Exception
      */
@@ -865,9 +877,14 @@ class PluginInfobloxCron extends CommonDBTM {
         return true;
     }
     
-    static private function updateLastSequenceId($id, $last_sequence_id) {
+    /**
+     * Update the last_sequence_id field for the server.
+     * @param int $severId ID of the server.
+     * @param string $last_sequence_id Last sequence ID. See doc of WAPI.
+     */
+    static private function updateLastSequenceId($severId, $last_sequence_id) {
         $server = new PluginInfobloxServer();
-        $server->getFromDB($id);
+        $server->getFromDB($severId);
         $server->fields['last_sequence_id'] = $last_sequence_id;
         $server->updateInDB(array('last_sequence_id'));
     }

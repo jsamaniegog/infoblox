@@ -124,6 +124,22 @@ class PluginInfobloxServer extends CommonDBTM {
         echo Html::input("wapi_version", array('value' => $this->fields['wapi_version']));
         echo "<b style='color: LightGrey;'>&nbsp;" . __('Example: 2.6.1 (Go to https://your.infoblox.server/wapidoc to know the version)', 'infoblox') . "</b>";
         
+        echo "</td></tr><tr><td colspan='2'>";
+        
+        echo __('Host number to synchronize each time', 'infoblox') . "</td><td colspan='2'>";
+        //echo Html::input("wapi_version", array('value' => $this->fields['wapi_version']));
+        Dropdown::showNumber(
+            'host_number_to_sync', 
+            array(
+                'value' => $this->fields['host_number_to_sync'],
+                'min'   => 10,
+                'max'   => 5000,
+                'step'  => 10,
+                'toadd' => array(0 => __('All hosts', 'infoblox'),1,2,3,4,5)
+            )
+        );
+        echo "<b style='color: LightGrey;'>&nbsp;" . __('Limit this number if the task is too long', 'infoblox') . "</b>";
+        
         echo "</td></tr><td colspan='4'><hr width='100%'>";
         echo "</td></tr><tr><td colspan='2'>";
         
