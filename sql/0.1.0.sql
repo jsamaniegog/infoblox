@@ -24,7 +24,7 @@ CREATE TABLE `glpi_plugin_infoblox_servers` (
         `user` varchar(32) NOT NULL default 'admin',
         `password` varchar(32) NOT NULL default '',
         `wapi_version` char(5) NOT NULL default '2.6.1',
-        `state_ids` varchar(32) NOT NULL default 0,
+        `state_ids` varchar(32) NOT NULL default 0 COMMENT 'Coma separated IDs',
         `ipam` tinyint(1) NOT NULL default 0,
         `devices` tinyint(1) NOT NULL default 0,
         `dhcp` tinyint(1) NOT NULL default 0,
@@ -37,14 +37,17 @@ CREATE TABLE `glpi_plugin_infoblox_servers` (
         `printers` tinyint(1) NOT NULL default 0,
         `peripherals` tinyint(1) NOT NULL default 0,
         `networkequipments` tinyint(1) NOT NULL default 0,
-        `phones` tinyint(1) NOT NULL default 0
+        `phones` tinyint(1) NOT NULL default 0,
+        `tracking_objects_changes` tynyint(1) NOT NULL default 0,
+        `last_sequence_id` varchar(100) default NULL,
+        `host_number_to_sync` int(11) NOT NULL default 0 COMMENT '0: sync all',
 )ENGINE=MyISAM  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
 CREATE TABLE `glpi_plugin_infoblox_syncs` (
         `id` int(11) NOT NULL PRIMARY KEY AUTO_INCREMENT,
         `items_id` int(11) NOT,
         `itemtype` varchar(100) NOT NULL,        
-        `synchronized` tinyint(1) NOT NULL default 0,
+        `synchronized` tinyint(1) NOT NULL default 0 COMMENT '0: no sync and no added to infoblox, 1: sync',
         `datetime` datetime NOT NULL,
         `error` varchar(300) default NULL
 )ENGINE=MyISAM  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;

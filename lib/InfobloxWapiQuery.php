@@ -153,7 +153,7 @@ class InfobloxWapiQuery {
      * @param array $fields Array of fields and values.
      * @param string $method Can be: GET, POST, PUT or DELETE. See: 
      * https://your.infoblox.server/wapidoc.
-     * @return array Array result set.
+     * @return array|bool Array result set. Return false if it fails.
      */
     public function query($object, $fields = array(), $function = null, $method = "GET") {
         // sets previous send query

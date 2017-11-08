@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Complemento Infoblox para GLPI\n"
-"POT-Creation-Date: 2017-10-27 14:39+0200\n"
-"PO-Revision-Date: 2017-10-27 14:46+0200\n"
+"POT-Creation-Date: 2017-11-06 12:36+0100\n"
+"PO-Revision-Date: 2017-11-06 12:57+0100\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: es_ES\n"
@@ -55,11 +55,11 @@ msgstr "Servidores"
 msgid "Infoblox Cron"
 msgstr "Cron Infoblox"
 
-#: inc/cron.class.php:397
+#: inc/cron.class.php:685
 msgid "No Infoblox servers configured."
 msgstr "No hay servidores de Infoblox configurados."
 
-#: inc/cron.class.php:411
+#: inc/cron.class.php:699
 msgid "Nothing to do"
 msgstr "Nada que hacer"
 
@@ -240,6 +240,25 @@ msgid "Network device"
 msgid_plural "Network devices"
 msgstr[0] ""
 msgstr[1] ""
+
+#: inc/server.class.php:262
+msgid "Tracking objects changes"
+msgstr "Seguimiento de los cambios de objetos"
+
+#: inc/server.class.php:264
+msgid ""
+"This option enables \"Tracking Object Changes in the Database\", this allows "
+"to synchronize all the objects in a bidirectional way, if the option is not "
+"checked, it will only be synchronized in the GLPI direction to Infoblox. You "
+"must enable \"Objects changes tracking\" in Infoblox, otherwise you get an "
+"error."
+msgstr ""
+"Esta opción habilita «Seguimiento de cambios de objetos en la base de "
+"datos» / «Tracking Object Changes in the Database», esto permite sincronizar "
+"todos los objetos de forma bidireccional. Si la opción no está marcada, solo "
+"se sincronizará en la dirección GLPI a Infoblox. Debe habilitar «Seguimiento "
+"de cambios de objetos» / «Objects changes tracking» en Infoblox, de lo "
+"contrario recibirá un error."
 
 #: setup.php:64
 msgid "This plugin requires Linux OS."

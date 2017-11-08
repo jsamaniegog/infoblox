@@ -254,7 +254,19 @@ class PluginInfobloxServer extends CommonDBTM {
         echo "<label ";
         echo "for='dropdown_networkequipments$rand'>";
         echo ' ' . _n('Network device', 'Network devices', 2) . '';
+        echo "</label><br><br><br><br>";
+        
+        $rand = Dropdown::showYesNo('tracking_objects_changes', $this->fields['tracking_objects_changes'], -1, array('use_checkbox'=>true));
+        echo "<label ";
+        echo "for='dropdown_tracking_objects_changes$rand'>";
+        echo ' ' . __('Tracking objects changes', 'infoblox') . '';
         echo "</label>";
+        echo "<b style='color: LightGrey;'>&nbsp;" . __('This option enables '
+            . '"Tracking Object Changes in the Database", this allows to '
+            . 'synchronize all the objects in a bidirectional way, if the '
+            . 'option is not checked, it will only be synchronized in the GLPI '
+            . 'direction to Infoblox. You must enable "Objects changes '
+            . 'tracking" in Infoblox, otherwise you get an error.', 'infoblox') . "</b>";
         
         echo "</td></tr>";
 

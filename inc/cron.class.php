@@ -57,7 +57,8 @@ class PluginInfobloxCron extends CommonDBTM {
 
     /**
      * This function searchs in GLPI all types of host configured and add or
-     * update the infoblox database.
+     * update the infoblox database. Only update the infoblox database if the 
+     * host has "synchronized = 1" or is not in sync table.
      * @param CronTask $task A CronTask object.
      * @param InfobloxWapiQuery $infoblox
      * @param array $affected_entities
@@ -73,7 +74,7 @@ class PluginInfobloxCron extends CommonDBTM {
         $fqdns_id, $configure_for_dns = true, $configure_for_dhcp = true, 
         $logPrefixError = "Error: ", 
         $assets = array('Computer', 'Phone', 'Peripheral', 'NetworkEquipment', 'Printer'),
-        $ipam = true, $dns = true, $dhcp = true, $create_ptr = true
+        $ipam = true, $dns = true, $dhcp = true, $create_ptr = true, $hostNumberToSync = 0
     ) {
         $toReturn = true;
 
@@ -251,10 +252,10 @@ class PluginInfobloxCron extends CommonDBTM {
 
                         //$toReturn = self::checkResult($result, $task, $infoblox, $logPrefixError, $record['name'], $id_asset, $asset);
 
-                        // todo: eliminar estas líneas
+                        // Host number to sync
                         if (isset($result)) {
                             $count = (!isset($count)) ? 0 : $count + 1;
-                            if ($count >= 1) {
+                            if ($count >= $hostNumberToSync) {
                                 return $toReturn;
                             }
                         }
@@ -455,13 +456,13 @@ class PluginInfobloxCron extends CommonDBTM {
             }
         }
         
-        foreach ($hostData['ipv6addrs'] as $ipv4addr) {
+        foreach ($hostData['ipv6addrs'] as $ipv6addr) {
             //list($a, $b, $c, $d) = explode(".", $ipv4addr['ipv6addr']);
             
             // fields to add or update
             $fields = array(
                 //"name" => "$d.$c.$b.$a",
-                "ipv6addr" => $ipv4addr['ipv6addr'],
+                "ipv6addr" => $ipv6addr['ipv6addr'],
                 "ptrdname" => $domain
             );
             
@@ -688,7 +689,7 @@ class PluginInfobloxCron extends CommonDBTM {
         $toReturn = true;
 
         foreach ($infoblox_servers as $server) {
-            // for logs
+            // prefix for logs
             $logPrefix = "[" . $server['name'] . "] ";
 
             $task->addVolume(1);
@@ -698,14 +699,15 @@ class PluginInfobloxCron extends CommonDBTM {
                 $task->log($logPrefix . __('Nothing to do', 'infoblox'));
                 continue;
             }
-
+            
+            // initialize WapiQuery to request the web server
             $infoblox = new InfobloxWapiQuery(
                 $server['address'], $server['user'], $server['password'], $server['wapi_version']
             );
-
+            
             // NOTE: Microsoft servers cannot be updated when you add a host 
-            // you must do it independently. For that reason is the option 
-            // "is_ad_dns_zone".
+            // you must do it independently. For that reason is the options 
+            // "is_ad_dns_zone" and "is_ad_dhcp".
             $configure_for_dhcp = ($server['dhcp'] == '1' and $server['is_ad_dhcp'] == '0') ?
                 true :
                 false;
@@ -718,6 +720,14 @@ class PluginInfobloxCron extends CommonDBTM {
             $dns = ($server['dns'] == '1') ? true : false;
             $dhcp = ($server['dhcp'] == '1') ? true : false;
             $create_ptr = ($server['create_ptr'] == '1') ? true : false;
+            $hostNumberToSync = $server['host_number_to_sync'];
+            
+            // todo: hay que saber que cambios son más recientes para actualizar en un sentido u otro.
+            
+            // check for changes
+            if (!self::trackingObjectChangesSync($task, $infoblox, $server, $logPrefix)) {
+                return false;
+            }
             
             // hosts
             $result = self::addAllHostToInfobloxHosts(
@@ -730,7 +740,7 @@ class PluginInfobloxCron extends CommonDBTM {
                 $configure_for_dhcp, 
                 $logPrefix,
                 self::getAssetsToSync($server),
-                $ipam, $dns, $dhcp, $create_ptr
+                $ipam, $dns, $dhcp, $create_ptr, $hostNumberToSync
             );
 
             if (!$result) {
@@ -772,4 +782,263 @@ class PluginInfobloxCron extends CommonDBTM {
         return $assets;
     }
     
+    static private function getLastSecuenceId($server) {
+        return $server['last_sequence_id'];
+    }
+    
+    /**
+     * Check for changes in infoblox an update the GLPI database with them.
+     * @param CronTask $task A CronTask object.
+     * @param InfobloxWapiQuery $infoblox InfobloxWapiQuery object.
+     * @param array $server Server record
+     * @return bool False if is not enabled the option.
+     */
+    static private function trackingObjectChangesSync($task, $infoblox, $server, $logPrefix = "") {
+        if (!self::isTrackingObjectChangesEnabled($server)) {
+            return false;
+        }
+        
+        $lastSecuenceId = self::getLastSecuenceId($server);
+        
+        // if no lastSecuenceId set one to start
+        if (empty($lastSecuenceId)) {
+            $lastSecuenceId = '0:0';
+        }
+        
+        $infoblox->setMaxResults(self::getMaxResultsForFullSyncDbObjects());
+        
+        // fields for incremental sync
+        $fields = array(
+            "object_types" => "record:host",
+            "start_sequence_id" => $lastSecuenceId
+        );
+
+        $result = $infoblox->query("db_objects", $fields);
+
+        // Objects changes tracking is not enabled in infoblox.
+        if (!$result and strstr($infoblox->getError(), "not enabled")) {
+            $task->log($logPrefix . __("Error: ", "infoblox") . $infoblox->getError());
+            return false;
+        }
+        
+        // error for a full sync 
+        if (!$result 
+            and (strstr($infoblox->getError(), "full synchronization") 
+                or strstr($infoblox->getError(), "The current id of database is different than the one provided"))
+        ) {
+            
+            $task->log($logPrefix . __("Trying full sync...", "infoblox"));
+            
+            $fields = array(
+                "object_types" => "record:host"
+            );
+            
+            $result = $infoblox->query("db_objects", $fields);
+        }
+        
+        // other errors
+        if (!$result) {
+            $task->log($logPrefix . __("Error: ", "infoblox") . $infoblox->getError());
+            return false;
+            
+        }
+        
+        // incremental sync
+        if ($result[count($result) - 1]['last_sequence_id'] == $lastSecuenceId) {
+            // is up to date!
+            $task->log($logPrefix . __("Server is up to date. Last secuence id: ", "infoblox") . $lastSecuenceId);
+            return true;
+        }
+        
+        if (self::updateInGlpi($result)) {
+            self::updateLastSequenceId(
+                $server['id'], 
+                $result[count($result) - 1]['last_sequence_id']
+            );
+            $task->log($logPrefix . __("Tracking object changes complete. Last secuence id: ", "infoblox") . $lastSecuenceId);
+            
+        } else {
+            $task->log($logPrefix . __("Tracking object changes fails. Last secuence id: ", "infoblox") . $lastSecuenceId);
+            return false;
+        }
+        
+        return true;
+    }
+    
+    static private function updateLastSequenceId($id, $last_sequence_id) {
+        $server = new PluginInfobloxServer();
+        $server->getFromDB($id);
+        $server->fields['last_sequence_id'] = $last_sequence_id;
+        $server->updateInDB(array('last_sequence_id'));
+    }
+    
+    /**
+     * Update GLPI with the result data objects.
+     * @param array $result Array result of infoblox query.
+     */
+    static private function updateInGlpi($result) {
+        foreach ($result as $key => $object) {
+                
+            if ($object['object_type'] == 'record:host') {
+                if (!self::updateIpaddressesInGlpi($object['object'])) {
+                    return false;
+                }
+            }
+
+        }
+        
+        return true;
+    }
+    
+    /**
+     * Update the IP Address in GLPI if there are differences with the object.
+     * @param type $object
+     */
+    static private function updateIpaddressesInGlpi($object) {
+        if (!self::updateIpaddressInGlpi($object, '4')) {
+            return false;
+        }
+        
+        if (!self::updateIpaddressInGlpi($object, '6')) {
+            return false;
+        }
+        
+        return true;
+    }
+    
+    /**
+     * Update an object in GLPI if there are differences. If the object does not 
+     * exist will NOT be created. The mac address must exists.
+     * @param array $object Objeto
+     * @param string $version 4 or 6
+     */
+    static private function updateIpaddressInGlpi($object, $version = '4') {
+        $np = new NetworkPort();
+        $nn = new NetworkName();
+        $ip = new IPAddress();
+        
+        // hack for ipv6
+        if ($version == '6') {
+            foreach ($object['ipv' . $version . 'addrs'] as $key => $ipaddr) {
+                $object['ipv' . $version . 'addrs'][$key]['mac'] = $ipaddr['duid'];
+            }
+        }
+        
+        foreach ($object['ipv' . $version . 'addrs'] as $ipaddr) {
+            
+            //$ipString = $ipaddr['ipv' . $version . 'addr'];
+            
+            if ($ipaddr['mac'] == "") {
+                continue;
+            }
+            
+            // search for other equal mac addresses
+            $ipsWithSameMacInInfoblox = self::getAllIpsByMacInArray(
+                $object['ipv' . $version . 'addrs'], 
+                $ipaddr['mac'],
+                $version
+            );
+            
+            // search ports
+            $ports = $np->find("mac = '" . $ipaddr['mac'] . "'");
+            
+            foreach ($ports as $id => $port) {
+                // search networkname
+                if ($nn->getFromDBByCrit(array(
+                    'itemtype' => 'NetworkPort', 'items_id' => $id
+                ))) {
+                    // search ip address
+                    $ips = $ip->find('version = ' . $version . ' and itemtype = "NetworkName" and items_id = ' . $nn->getID());
+                    foreach ($ips as $ipArray) {
+                        $ipsWithSameMacInGlpi[] = $ipArray['name'];
+                    }
+                    
+                    // update ip
+                    if (count($ipsWithSameMacInGlpi) == 1 and count($ipsWithSameMacInInfoblox) == 1
+                        and $ipsWithSameMacInGlpi[0] != $ipsWithSameMacInInfoblox[0]
+                    ) {
+                        $ip->getFromDBByCrit(array("name" => $ipsWithSameMacInGlpi[0]));
+                        $input = $ip->prepareInput(array('name' => $ipsWithSameMacInInfoblox[0]));
+                        $input['id'] = $ip->getID();
+                        $input['items_id'] = $nn->getID();
+                        $input['itemtype'] = "NetworkName";
+                        $ip->update($input);
+                        continue;
+                    } 
+                    
+                    // add ips in GLPI that not are in GLPI
+                    $ipsDiff = array_diff($ipsWithSameMacInInfoblox, $ipsWithSameMacInGlpi);
+                    
+                    foreach ($ipsDiff as $ipString) {
+                        unset($ip->fields['id']);
+                        $input = $ip->prepareInput(array('name' => $ipString));
+                        //$ip->fields['name'] = $ipString;
+                        $input['items_id'] = $nn->getID();
+                        $input['itemtype'] = "NetworkName";
+                        $ip->add($input);
+                    }
+                    
+                    
+                    // remove ips of GLPI that not are in Infoblox
+                    $ipsDiff = array_diff($ipsWithSameMacInGlpi, $ipsWithSameMacInInfoblox);
+                    
+                    foreach ($ipsDiff as $ipString) {
+                        if ($ip->getFromDBByCrit(array("name" => $ipString))) {
+                            $ip->deleteFromDB(1);
+                        }
+                    }
+                    
+                }   
+            }
+        }
+        
+        return true;
+    }
+    
+    /**
+     * Get an array of IPs returned by Infoblox and search for a mac address to 
+     * get de IP address with the same mac.
+     * @param array $arrayIps
+     * @param string $mac
+     * @param string $version Version: 4 or 6.
+     * @return array Array with the IP addresses asociated with the mac passed.
+     */
+    static private function getAllIpsByMacInArray($arrayIps, $mac, $version = '4') {
+        
+        $ipField = 'ipv' . $version . 'addr';
+        
+        foreach ($arrayIps as $key => $value) {
+            if ($value['mac'] == $mac) {
+                $ips[] = $value[$ipField];
+            }
+        }
+        
+        return array_unique($ips);
+    }
+    
+    /**
+     * Check if tracking object changes are enabled.
+     * @param type $server
+     * @return boolean
+     */
+    static private function isTrackingObjectChangesEnabled($server) {
+        if ($server['tracking_objects_changes'] == 1) {
+            return true;
+        }
+        
+        return false;
+    }
+    
+    /**
+     * NIOS does not support WAPI paging mechanism. As the synchronization 
+     * results are displayed in the order of sequence_id, you must specify 
+     * _max_results to achieve paging mechanism for synchronization.
+     * @link https://docs.infoblox.com/display/NAG8/Tracking+Object+Changes+in+the+Database
+     * @return int
+     */
+    static private function getMaxResultsForFullSyncDbObjects() {
+        // todo: contar elementos de la base de datos para establecer el valor
+        // máximo
+        return 1000;
+    }
 }
