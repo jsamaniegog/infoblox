@@ -27,6 +27,7 @@ function plugin_init_infoblox() {
 
     Plugin::registerClass('PluginInfobloxConfig', array('addtabon' => 'Config'));
     Plugin::registerClass('PluginInfobloxServer');
+    Plugin::registerClass('PluginInfobloxNetworkName', array('addtabon' => 'NetworkName'));
     
     Plugin::registerClass('PluginInfobloxItem', array('addtabon' => array('Computer')));
 

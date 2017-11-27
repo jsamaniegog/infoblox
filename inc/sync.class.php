@@ -26,4 +26,18 @@
  */
 class PluginInfobloxSync extends CommonDBTM {
     
+    /**
+     * Set a record as unsyncronized.
+     * @param string $itemtype
+     * @param int $items_id
+     */
+    public function setUnsync($itemtype, $items_id) {
+        $this->getFromDBByCrit(array(
+            'itemtype' => $itemtype,
+            'items_id' => $items_id
+        ));
+        
+        $this->fields['synchronized'] = 0;
+        $this->updateInDB(array('synchronized'));
+    }
 }

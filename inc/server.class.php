@@ -290,4 +290,37 @@ class PluginInfobloxServer extends CommonDBTM {
 
         return true;
     }
+    
+    /**
+     * Search in Infoblox networks of this server.
+     * @todo Paging the results.
+     */
+    public function showNetworksDropdown() {
+        $infoblox = new InfobloxWapiQuery(
+            $this->getField("address"), 
+            $this->getField("user"), 
+            $this->getField("password"), 
+            $this->getField("wapi_version")
+        );
+
+        $networks = $infoblox->query("network");
+
+        if (!$networks) {
+            echo '';
+
+        } else {
+
+            foreach ($networks as $network) {
+                if (isset($network['comment'])) {
+                    $text = $network['comment'] . " - " . $network['network'];
+                } else {
+                    $text = $network['network'];
+                }
+
+                $datas[$network['_ref']] = $text;
+            }
+
+            Dropdown::showFromArray("ipnetwork_ref", $datas);
+        }
+    }
 }
